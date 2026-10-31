@@ -6,6 +6,19 @@ when they are released to `main`.
 
 ## Unreleased
 
+## Milestone: Dated test case copy moved to the archive – 2026-10-31
+Summary (same as the pull request):
+- `test/01_test_cases_2026-10-27.md` moved to `test/archive/`
+- README now names `test/01_test_cases.md` as the current test cases and test log (§8.1); link in `tpjm/change-proposal-R1.md` updated
+
+- **2026-10-31 – Moved `test/01_test_cases_2026-10-27.md` to `test/archive/`.**
+  `git mv` keeps its history. The README points to `test/01_test_cases.md`
+  (v1.2, 29 Oct 2026) as the current test cases and test log (§8.1); the link
+  in `tpjm/change-proposal-R1.md` points to the archive path. Archived files
+  and older CHANGELOG entries are unchanged.
+  *Why:* the team wants the dated copy out of the active test folder.
+  *Prompt:* "Move 01_test_cases_2026-10-27.md to test/archive."
+
 ## Milestone: Dated requirement copies moved to the archive – 2026-10-31
 Summary (same as the pull request):
 - `requirements-R1-MVP_2026-10-27.md` and `requirements-R2-R4_2026-10-27.md` moved to `requirements/archive/`

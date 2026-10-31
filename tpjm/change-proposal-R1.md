@@ -73,7 +73,7 @@ Each point says what the app does today and what we propose. The "Decision" colu
 
 - [`requirements-R1-MVP_2026-10-27.md`](https://github.com/st854d2gpb-create/9_Applied-AI/blob/main/requirements/archive/requirements-R1-MVP_2026-10-27.md) – 53 requirements for Release 1
 - [`requirements-R2-R4_2026-10-27.md`](https://github.com/st854d2gpb-create/9_Applied-AI/blob/main/requirements/archive/requirements-R2-R4_2026-10-27.md) – 18 requirements for later releases
-- [`01_test_cases_2026-10-27.md`](https://github.com/st854d2gpb-create/9_Applied-AI/blob/main/test/01_test_cases_2026-10-27.md) – test cases v1.2 (97 automated tests PASS; TC-100…TC-107 new)
+- [`01_test_cases_2026-10-27.md`](https://github.com/st854d2gpb-create/9_Applied-AI/blob/main/test/archive/01_test_cases_2026-10-27.md) – test cases v1.2 (97 automated tests PASS; TC-100…TC-107 new)
 - [`03-design.md`](https://github.com/st854d2gpb-create/9_Applied-AI/blob/main/data/03-design.md) – design v0.4 (25 Oct 2026), not yet updated (D-12)
 - `data/product_catalogue.xlsx` (105 products) and `data/project_catalogue.xlsx` (9 projects)
 - `Feature_Implementation_Plan.xlsx` v0.9 – features, status, traceability and the discussion list with the decisions

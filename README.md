@@ -178,7 +178,7 @@ The script starts its own local web server, runs the suite in headless Chromium 
 writes `test/results/<date>_<commit>.md` (readable table) and `.json` (all details:
 commit, branch, browser, every test). A file name ending in `-dirty` means the run
 included uncommitted changes. Exit code 1 if a test fails. Commit the result file
-if it is evidence for a release (test log in `test/01_test_cases_2026-10-27.md` §8.1).
+if it is evidence for a release (test log in `test/01_test_cases.md` §8.1).
 Options: `--out <folder>`, `--no-save`.
 
 **Automatically on GitHub:** `.github/workflows/tests.yml` runs the same script on
@@ -300,7 +300,7 @@ usability test or by hand.
 | `tools/` | Script that adds the rule-engine columns to the team workbook |
 | `requirements/` | Requirements (R1 MVP, R2–R4); current version: files with `_2026-10-27` (after the vibe coding session), older versions kept |
 | `data/` | Team data workbook (`product_catalogue.xlsx`) with CSV exports, PLZ table, concept and design documents |
-| `test/` | Test case descriptions (current version: `01_test_cases_2026-10-27.md`) and saved test results in `test/results/` |
+| `test/` | Test case descriptions (current version: `01_test_cases.md`; older dated copies in `test/archive/`) and saved test results in `test/results/` |
 | `diagrams/` | Architecture and planning diagrams |
 | `pitch/` | Pitch deck |
 
