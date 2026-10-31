@@ -117,6 +117,20 @@ h1, h2, h3, .btn, .tab, .badge, .tag, .price-value, .total-label {
 }
 .round-btn:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
 
+/* ---------------------------------------------------------------------
+   Progress bar: Store → Project → Questions → List
+   --------------------------------------------------------------------- */
+.progress { max-width: 760px; margin: 0 auto; padding: 4px 16px 0; }
+.progress[hidden] { display: none; }
+.progress-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.progress-step { min-width: 0; }
+.progress-seg { display: block; height: 8px; border-radius: 999px; background: #d9d9d9; }
+.progress-step.done .progress-seg, .progress-step.current .progress-seg { background: var(--brand); }
+.progress-step.stop .progress-seg { background: var(--stop); }
+.progress-label { display: block; margin-top: 6px; font-size: .9rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.progress-step.current .progress-label, .progress-step.stop .progress-label { color: var(--ink); font-weight: 700; }
+.progress-step.stop .progress-label { color: var(--stop); }
+
 main { max-width: 760px; margin: 0 auto; padding: 8px 16px 32px; outline: none; }
 
 /* ---------------------------------------------------------------------
@@ -402,6 +416,6 @@ main { max-width: 760px; margin: 0 auto; padding: 8px 16px 32px; outline: none; 
 
 /* Laptop: wider content, list items in two columns */
 @media (min-width: 1024px) {
-  main, .app-footer { max-width: 960px; }
+  main, .app-footer, .progress { max-width: 960px; }
   .items { display: grid; grid-template-columns: 1fr 1fr; column-gap: 32px; }
 }

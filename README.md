@@ -80,6 +80,11 @@ would fail WCAG contrast (2.7:1), so text on orange is black and orange text use
 darker shades (#E05A00 for large bold text, #C85000 for normal text).
 
 ## Using the app
+A **progress bar** under the header shows where the customer is: **Store → Project →
+Questions → List** (done steps orange, current step bold). A safety stop turns the step
+where it happened red (e.g. "unknown wall" at Questions, high-risk work at Project).
+It is hidden on the start notice.
+
 1. **Start:** notice about AI use, sample data, privacy and the browser speech service.
 2. **Store (optional):** enter a postcode → sample stores within 50 km, nearest first → tap one. Or skip.
 3. **Project:** describe it (type or 🎤) or tap one of the 9 project buttons (grouped, with safety level).
@@ -164,7 +169,7 @@ repository's `data/` folder – so serve the **repository root**:
 ```bash
 python3 -m http.server 8000          # in the repository root
 # app:   http://localhost:8000/app/
-# tests: http://localhost:8000/app/tests.html   (summary at the top: 105 tests)
+# tests: http://localhost:8000/app/tests.html   (summary at the top: 106 tests)
 ```
 `tests.html` runs all automated tests in the browser against the real data files,
 fixture copies of the catalogue, the AI `mock` mode and a simulated Web Speech API.
