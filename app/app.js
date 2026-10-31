@@ -131,7 +131,7 @@
     renderHeader();
     const m = main();
     m.replaceChildren();
-    const screens = { loading: viewLoading, error: viewError, start: viewStart, store: viewStore, choose: viewChoose, recognized: viewRecognized, high_risk: viewHighRisk, question: viewQuestion, result: viewResult };
+    const screens = { loading: viewLoading, error: viewError, start: viewStart, store: viewStore, choose: viewChoose, recognized: viewRecognized, high_risk: viewHighRisk, question: viewQuestion, result: viewResult, shopping: viewShopping };
     m.appendChild(screens[state.screen]());
     renderNav();
     renderProgress();
@@ -150,8 +150,8 @@
     btn.setAttribute("title", t("lang_toggle"));
   }
 
-  // Progress bar over the flow: Store → Project → Questions → List (NFR-01, NFR-05)
-  const STEPS = ["store", "project", "questions", "list"];
+  // Progress bar over the flow: Store → Project → Questions → List → Shopping (NFR-01, NFR-05)
+  const STEPS = ["store", "project", "questions", "list", "shopping"];
 
   /** Which step a screen belongs to, and whether the flow stopped there (safety stop). */
   function progressStep() {
@@ -165,6 +165,7 @@
       const blocked = state.result && state.result.state === "safety_blocked";
       return blocked ? { step: "questions", stop: true } : { step: "list", stop: false };
     }
+    if (sc === "shopping") return { step: "shopping", stop: false };
     return null;
   }
 
@@ -199,10 +200,10 @@
     nav.hidden = hidden;
     document.body.classList.toggle("has-nav", !hidden);
     if (hidden) return;
-    const active = state.screen === "store" ? "store" : state.screen === "result" ? "list" : "home";
+    const active = state.screen === "store" ? "store" : ["result", "shopping"].includes(state.screen) ? "list" : "home";
     const items = [
       { id: "home", label: t("nav_start"), action: resetProject },
-      { id: "store", label: t("nav_store"), action: () => openStoreSearch(state.result ? "result" : "choose") },
+      { id: "store", label: t("nav_store"), action: () => openStoreSearch(state.screen === "shopping" ? "shopping" : state.result ? "result" : "choose") },
       { id: "list", label: t("nav_list"), action: () => go("result"), disabled: !state.result }
     ];
     nav.replaceChildren(...items.map((it) => el("button", {
@@ -833,6 +834,8 @@
         ? [el("span", { class: "total-label", text: t("total") }), priceEl(r.total.amount, "total-value")]
         : [el("span", { text: t("total_" + r.total.reason) })]));
     box.appendChild(el("p", { class: "notice", text: t("notice_estimates") }));
+    // Shopping by aisle: the same list, sorted for the walk through the store
+    box.appendChild(el("button", { type: "button", class: "btn brand block", id: "start-shopping", text: t("shopping_start"), onclick: () => go("shopping") }));
     box.appendChild(viewSave(r));
     const howto = viewHowto(state.template);
     if (howto) box.appendChild(howto);
@@ -892,9 +895,7 @@
     ]));
 
     const q = i.quantity;
-    const qtyText = q.clear
-      ? t("qty_packs", { packs: q.packs }) + (q.pack_qty > 1 ? " (" + t("qty_need", { units: q.units }) + ")" : "")
-      : t("qty_unclear");
+    const qtyText = qtyLabel(q);
     li.appendChild(el("p", { class: "qty" }, [
       el("span", { class: "tag estimate", text: t("qty_estimate") }),
       el("span", { text: " " + qtyText + " · " }),
@@ -1087,6 +1088,102 @@
     a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
     return true;
+  }
+
+  /**
+   * Shopping by aisle: groups the list items of the chosen store by aisle
+   * (ascending), within an aisle by shelf. Owned items are left out; items the
+   * store cannot supply and unresolved items go to "not on the route" with the
+   * FR-31 referral. Only reorders the checked list – no new decision (RB-17).
+   */
+  function aisleRoute(r) {
+    const aisles = new Map();
+    const off = [];
+    let owned = 0;
+    r.items.forEach((i) => {
+      if (i.owned) { owned++; return; }
+      if (!i.product || !state.storeId) { off.push({ item: i, av: null }); return; }
+      const av = R.availability(state.data.stock, state.data.stores, state.storeId, i.product.product_nr, state.storeOrigin, CFG.store);
+      if (av.status !== "in_stock") { off.push({ item: i, av }); return; }
+      const s = R.storeInfo(state.data.stock, state.storeId, i.product.product_nr);
+      if (!aisles.has(s.aisle_nr)) aisles.set(s.aisle_nr, { aisle_nr: s.aisle_nr, aisle_name: s.aisle_name, stops: [] });
+      aisles.get(s.aisle_nr).stops.push({ item: i, shelf_nr: s.shelf_nr });
+    });
+    const num = (v) => (Number.isFinite(Number(v)) ? Number(v) : Infinity);
+    const groups = [...aisles.values()].sort((a, b) => num(a.aisle_nr) - num(b.aisle_nr) || String(a.aisle_nr).localeCompare(String(b.aisle_nr)));
+    groups.forEach((g) => g.stops.sort((a, b) => num(a.shelf_nr) - num(b.shelf_nr) || a.item.product.product_nr.localeCompare(b.item.product.product_nr)));
+    return { groups, off, owned };
+  }
+
+  function qtyLabel(q) {
+    return q.clear
+      ? t("qty_packs", { packs: q.packs }) + (q.pack_qty > 1 ? " (" + t("qty_need", { units: q.units }) + ")" : "")
+      : t("qty_unclear");
+  }
+
+  function viewShopping() {
+    const r = state.result;
+    const wrap = el("div", { class: "result" });
+    const box = el("section", { class: "card shopping", "data-shopping": state.storeId || "none" });
+    box.appendChild(el("h2", { text: t("shopping_title") + " – " + pick(state.template.title) }));
+    const store = state.storeId ? state.data.stores.find((x) => x.store_id === state.storeId) : null;
+    if (!store) {
+      box.appendChild(el("p", { class: "hint", "data-shopping-nostore": "1", text: t("shopping_no_store") }));
+      box.appendChild(el("button", { type: "button", class: "btn primary block", id: "shopping-add-plz", text: t("store_add_plz"), onclick: () => openStoreSearch("shopping") }));
+    } else {
+      box.appendChild(el("div", { class: "store-bar", "data-store-bar": store.store_id }, [
+        el("span", { text: t("store_selected") + ": " }), el("strong", { text: store.name + " (" + store.city + ")" }),
+        el("span", { class: "tag sample", text: t("sample_note") }),
+        el("button", { class: "btn small", text: t("store_change"), onclick: () => openStoreSearch("shopping") })
+      ]));
+      const route = aisleRoute(r);
+      box.appendChild(el("p", { class: "muted small", text: t("shopping_intro") }));
+      const ol = el("ol", { class: "route" });
+      route.groups.forEach((g, n) => {
+        const li = el("li", { class: "route-aisle", "data-route-aisle": String(g.aisle_nr) }, [
+          el("h3", {}, [el("span", { class: "route-no", "aria-hidden": "true", text: String(n + 1) }),
+            el("span", { text: t("aisle") + " " + g.aisle_nr + (g.aisle_name ? " – " + g.aisle_name : "") })])
+        ]);
+        const ul = el("ul", { class: "items" });
+        g.stops.forEach((st) => {
+          const p = st.item.product;
+          ul.appendChild(el("li", { class: "item route-stop", "data-role": st.item.role, "data-product": p.product_nr, "data-shelf": String(st.shelf_nr) }, [
+            el("p", { class: "item-name" }, [el("span", { text: productName(p) }), el("span", { class: "muted", text: " · " + p.size })]),
+            el("p", {}, [el("strong", { text: t("shelf") + " " + (st.shelf_nr === null ? t("not_available") : st.shelf_nr) }),
+              el("span", { text: " · " + qtyLabel(st.item.quantity) + " " }), el("span", { class: "tag estimate", text: t("qty_estimate") })])
+          ]));
+        });
+        li.appendChild(ul);
+        ol.appendChild(li);
+      });
+      if (route.groups.length) box.appendChild(ol);
+      else box.appendChild(el("p", { class: "hint", text: t("shopping_nothing_here") }));
+      if (route.off.length) {
+        box.appendChild(el("h3", { text: t("shopping_off_title") }));
+        const ul = el("ul", { class: "items", "data-route-off": String(route.off.length) });
+        route.off.forEach(({ item, av }) => {
+          const p = item.product;
+          const li = el("li", { class: "item", "data-role": item.role, "data-product": p ? p.product_nr : "" }, [
+            el("p", { class: "item-name", text: p ? productName(p) + " · " + p.size : pick(item.label) })
+          ]);
+          if (!p) li.appendChild(el("p", { class: "warn-text", text: t("unresolved_item") }));
+          else if (av && av.referral) li.appendChild(el("p", { class: "referral-there", text: t("avail_referral", { store: av.referral.store.name, km: formatKm(av.referral.km) }) }));
+          else li.appendChild(el("p", { class: "referral-there", text: t("avail_ask_staff") }));
+          ul.appendChild(li);
+        });
+        box.appendChild(ul);
+      }
+      if (route.owned) box.appendChild(el("p", { class: "muted small", "data-route-owned": String(route.owned), text: t("shopping_owned", { n: route.owned }) }));
+    }
+    // Safety notices stay visible while shopping (SR-05)
+    r.notices.filter((n) => n.id !== "estimates").forEach((n) => {
+      box.appendChild(el("p", { class: "notice safety", "data-notice": n.id, text: n.text ? pick(n.text) : t("notice_" + n.id, n) }));
+    });
+    wrap.appendChild(box);
+    wrap.appendChild(el("div", { class: "actions" }, [
+      el("button", { type: "button", class: "btn", id: "back-to-list", text: t("shopping_back"), onclick: () => go("result") })
+    ]));
+    return wrap;
   }
 
   /** Share the same file via the phone's share sheet, where the browser supports it. */
@@ -1282,7 +1379,7 @@
     state.plzInput = "";      // the PLZ is not kept
     state.storeSearch = null;
     // D-3: a store change only looks up aisle/shelf again – checks stay identical (RB-17).
-    go(state.storeReturn === "result" && state.result ? "result" : "choose");
+    go(["result", "shopping"].includes(state.storeReturn) && state.result ? state.storeReturn : "choose");
   }
 
   /** Turns validated adapter facts into guesses for the template's required facts. */
@@ -1386,7 +1483,7 @@
   window.BBApp = Object.freeze({
     state, viewResult, viewItem, viewQuestion, viewChoose, viewRecognized, viewHighRisk,
     recompute, startTemplate, submitText, micTap, consentAccept, consentDecline,
-    viewStore, viewList, viewProgress, progressStep, openStoreSearch, searchStores, chooseStore, leaveStoreSearch, buildListText, saveList
+    viewStore, viewList, viewShopping, aisleRoute, viewProgress, progressStep, openStoreSearch, searchStores, chooseStore, leaveStoreSearch, buildListText, saveList
   });
 
   document.addEventListener("DOMContentLoaded", () => {

@@ -122,12 +122,12 @@ h1, h2, h3, .btn, .tab, .badge, .tag, .price-value, .total-label {
    --------------------------------------------------------------------- */
 .progress { max-width: 760px; margin: 0 auto; padding: 4px 16px 0; }
 .progress[hidden] { display: none; }
-.progress-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.progress-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
 .progress-step { min-width: 0; }
 .progress-seg { display: block; height: 8px; border-radius: 999px; background: #d9d9d9; }
 .progress-step.done .progress-seg, .progress-step.current .progress-seg { background: var(--brand); }
 .progress-step.stop .progress-seg { background: var(--stop); }
-.progress-label { display: block; margin-top: 6px; font-size: .9rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.progress-label { display: block; margin-top: 6px; font-size: .85rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .progress-step.current .progress-label, .progress-step.stop .progress-label { color: var(--ink); font-weight: 700; }
 .progress-step.stop .progress-label { color: var(--stop); }
 
@@ -333,6 +333,12 @@ main { max-width: 760px; margin: 0 auto; padding: 8px 16px 32px; outline: none; 
 .subtotal-label { font-family: var(--font-head); font-size: 1.2rem; font-weight: 700; }
 .subtotal .subtotal-value { font-size: 1.6rem; }
 .save-box { margin: 14px 0; }
+/* Orange action button: black text on brand orange (white would fail WCAG, see header) */
+.btn.brand { background: var(--brand); border-color: var(--brand); color: var(--ink); font-weight: 700; font-size: 1.25rem; border-radius: 10px; }
+.btn.brand:hover { background: var(--brand-dark); border-color: var(--brand-dark); }
+.route { list-style: none; margin: 12px 0 0; padding: 0; }
+.route-aisle h3 { display: flex; align-items: center; gap: 10px; }
+.route-no { display: inline-flex; align-items: center; justify-content: center; min-width: 32px; height: 32px; border-radius: 999px; background: var(--brand); color: var(--ink); font-weight: 800; }
 .weight-modes { margin-bottom: 10px; }
 .estimate-box { border-left: 5px solid var(--brand); background: var(--brand-soft); padding: 8px 12px; margin: 8px 0; }
 
