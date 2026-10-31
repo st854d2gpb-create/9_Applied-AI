@@ -134,6 +134,7 @@
     const screens = { loading: viewLoading, error: viewError, start: viewStart, store: viewStore, choose: viewChoose, recognized: viewRecognized, high_risk: viewHighRisk, question: viewQuestion, result: viewResult };
     m.appendChild(screens[state.screen]());
     renderNav();
+    renderProgress();
     document.getElementById("footer-text").textContent = t("footer");
     m.focus({ preventScroll: true });
     window.scrollTo(0, 0);
@@ -147,6 +148,47 @@
     btn.textContent = t("lang_toggle_short");
     btn.setAttribute("aria-label", t("lang_toggle_aria"));
     btn.setAttribute("title", t("lang_toggle"));
+  }
+
+  // Progress bar over the flow: Store → Project → Questions → List (NFR-01, NFR-05)
+  const STEPS = ["store", "project", "questions", "list"];
+
+  /** Which step a screen belongs to, and whether the flow stopped there (safety stop). */
+  function progressStep() {
+    const sc = state.screen;
+    if (["loading", "error", "start"].includes(sc)) return null;
+    if (sc === "store") return { step: "store", stop: false };
+    if (sc === "choose" || sc === "recognized") return { step: "project", stop: false };
+    if (sc === "high_risk") return { step: "project", stop: true };
+    if (sc === "question") return { step: "questions", stop: false };
+    if (sc === "result") {
+      const blocked = state.result && state.result.state === "safety_blocked";
+      return blocked ? { step: "questions", stop: true } : { step: "list", stop: false };
+    }
+    return null;
+  }
+
+  function renderProgress() {
+    const bar = document.getElementById("progress");
+    if (!bar) return;
+    const p = progressStep();
+    bar.hidden = !p;
+    if (!p) return;
+    bar.replaceChildren(viewProgress(p));
+  }
+
+  function viewProgress(p) {
+    const at = STEPS.indexOf(p.step);
+    const ol = el("ol", { class: "progress-steps", "data-step": p.step, "data-stop": p.stop ? "1" : "0" });
+    STEPS.forEach((s, i) => {
+      const status = i < at ? "done" : i === at ? (p.stop ? "stop" : "current") : "todo";
+      ol.appendChild(el("li", { class: "progress-step " + status, "data-progress": s, "aria-current": i === at ? "step" : null }, [
+        el("span", { class: "progress-seg", "aria-hidden": "true" }),
+        el("span", { class: "progress-label", text: t("step_" + s) }),
+        el("span", { class: "sr-only", text: " – " + t("step_status_" + status) })
+      ]));
+    });
+    return ol;
   }
 
   // Bottom tab bar (NFR-01: one-handed use in the store)
@@ -1344,7 +1386,7 @@
   window.BBApp = Object.freeze({
     state, viewResult, viewItem, viewQuestion, viewChoose, viewRecognized, viewHighRisk,
     recompute, startTemplate, submitText, micTap, consentAccept, consentDecline,
-    viewStore, viewList, openStoreSearch, searchStores, chooseStore, leaveStoreSearch, buildListText, saveList
+    viewStore, viewList, viewProgress, progressStep, openStoreSearch, searchStores, chooseStore, leaveStoreSearch, buildListText, saveList
   });
 
   document.addEventListener("DOMContentLoaded", () => {

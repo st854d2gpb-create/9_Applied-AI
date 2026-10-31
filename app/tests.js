@@ -1118,6 +1118,27 @@
     ["template", "mock", "proxy"].forEach((m) => assert(window.BBI18n.TEXTS.en["notice_ai_" + m] && window.BBI18n.TEXTS.de["notice_ai_" + m], "AI notice for mode " + m));
   });
 
+  test("NFR-05 (progress)", "Progress bar follows the flow: Store → Project → Questions → List; a safety stop is marked", () => {
+    const s = window.BBApp.state;
+    s.data = D;
+    const step = () => { const p = window.BBApp.progressStep(); return p ? p.step + (p.stop ? ":stop" : "") : null; };
+    s.screen = "start"; eq(step(), null, "no bar on the start notice");
+    s.screen = "store"; eq(step(), "store");
+    s.screen = "choose"; eq(step(), "project");
+    s.screen = "recognized"; eq(step(), "project");
+    s.screen = "high_risk"; eq(step(), "project:stop");
+    window.BBApp.startTemplate(SHELF(), {});
+    eq(s.screen, "question"); eq(step(), "questions");
+    renderResult(SHELF(), confirmed(SHELF_OK), null); s.screen = "result";
+    eq(step(), "list");
+    renderResult(SHELF(), confirmed(Object.assign({}, SHELF_OK, { wall_type: "unknown" })), null); s.screen = "result";
+    eq(step(), "questions:stop", "safety stop shown at the questions step");
+    const box = document.getElementById("sandbox");
+    box.replaceChildren(window.BBApp.viewProgress({ step: "questions", stop: false }));
+    eq([...box.querySelectorAll("[data-progress]")].map((li) => li.className.replace("progress-step ", "")), ["done", "done", "current", "todo"]);
+    eq(box.querySelector('[aria-current="step"]').getAttribute("data-progress"), "questions");
+  });
+
   test("NFR-09", "Every UI text exists in English and German", () => {
     const en = Object.keys(window.BBI18n.TEXTS.en), de = Object.keys(window.BBI18n.TEXTS.de);
     eq(en.filter((k) => !de.includes(k)), [], "missing in German");

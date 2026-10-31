@@ -6,6 +6,19 @@ when they are released to `main`.
 
 ## Unreleased
 
+## Milestone: Progress bar over the flow – 2026-10-31
+Summary (same as the pull request):
+- Progress bar under the header: Store → Project → Questions → List (done = orange, current = bold)
+- A safety stop marks its step red; hidden on the start notice; screen-reader labels for each step
+
+- **2026-10-31 – Progress bar.** New `renderProgress` / `viewProgress` in
+  `app/app.js` and `#progress` in `app/index.html`: four steps Store, Project,
+  Questions, List mapped from the current screen; a safety stop (high-risk work,
+  stop screen) is shown red at its step. Texts EN/DE, `aria-current="step"` and
+  hidden status words for screen readers. 1 new test (106 passing).
+  *Why:* customers should see where they are in the flow, like in other DIY-store apps.
+  *Prompt:* "Can you add a status bar like this to our app, following our process?"
+
 ## Milestone: Team decisions D-1, D-2, D-3 – save list, weight answers, subtotals – 2026-10-31
 Summary (same as the pull request):
 - D-1 (FR-17, DR-06): "Save list" downloads the complete list as a text file on the device (optional share sheet); no PLZ, nothing sent
