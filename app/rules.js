@@ -487,7 +487,28 @@
       items: [],
       notices: [],
       total: { amount: null, reason: null },
+      subtotals: {},        // FR-34: per section { amount, reason } – owned parts not counted
+      worst_case: null,     // SR-14 / D-2: { load_kg } when the weight was unknown
       evidence: ctx.evidence
+    };
+
+    // --- SR-14 / D-2 (29 Oct 2026): unknown weight → the project's worst case ---
+    // The worst case is the highest load the project allows at all
+    // (template.max_load_kg, team decision 31 Oct 2026). If that is above the
+    // wall's limit or no part can carry it, ST-05 stops with "weigh it / ask staff".
+    const lf = facts.load_kg;
+    if ((template.required_facts || []).includes("load_kg") && lf && lf.value === UNKNOWN_VALUE &&
+        TRUSTED.has(lf.status) && Number.isFinite(template.max_load_kg)) {
+      result.worst_case = { load_kg: template.max_load_kg, rule_id: "SR-14" };
+      facts = Object.assign({}, facts, { load_kg: makeFact(template.max_load_kg, STATUS.CONFIRMED, "rule:SR-14 worst case (weight unknown)") });
+      ctx.facts = facts;
+      log(ctx, "SR-14", "weight unknown", "worst case " + template.max_load_kg + " kg used", tplSource);
+    }
+    const worstStop = () => {
+      result.state = "safety_blocked";
+      result.blocked = { reason: "worst_case_over_limit", rule_id: "ST-05", load_kg: result.worst_case.load_kg, hand_off: "staff" };
+      log(ctx, "ST-05", "worst case above the limit", "stop → weigh it or ask staff", tplSource);
+      return finalise(result);
     };
 
     // --- G1: required facts confirmed? (SR-01, SR-03, SR-11, R-01) --------
@@ -517,6 +538,13 @@
       let hit;
       try { hit = condTrue(stop.when, ctx); } catch (e) { hit = true; }
       if (!hit) continue;
+      // Would the rule also stop with a tiny load? If not, only the assumed worst case triggered it → ST-05.
+      if (result.worst_case) {
+        let alsoLight;
+        try { alsoLight = condTrue(stop.when, Object.assign({}, ctx, { facts: Object.assign({}, facts, { load_kg: makeFact(0.01, STATUS.CONFIRMED, "probe") }) })); }
+        catch (_) { alsoLight = true; }
+        if (!alsoLight) return worstStop();
+      }
       let limit = null;
       if (stop.limit) { try { limit = round(evalExpr(stop.limit, ctx)); } catch (_) { limit = null; } }
       result.state = "safety_blocked";
@@ -544,6 +572,7 @@
       return finalise(result);
     }
     const wl = (template.wall_limits || {})[wall];
+    if (needsLoad && wl && load > wl.max_load_kg && result.worst_case) return worstStop();
     if (needsLoad && wl && load > wl.max_load_kg) {
       result.state = "safety_blocked";
       result.blocked = { reason: "wall_limit", rule_id: wl.rule_id, wall, limit_kg: wl.max_load_kg, load_kg: load };
@@ -582,9 +611,11 @@
       break;
     }
     if (!chosen) {
+      const cause = sizeCause(failures[failures.length - 1]);
+      if (result.worst_case && !cause) return worstStop(); // no part carries the assumed worst case
       result.state = "safety_blocked";
       result.blocked = { reason: "no_suitable_system", rule_id: "R-07", failures, message: template.no_system_message || null,
-        cause: sizeCause(failures[failures.length - 1]) };
+        cause };
       // A size problem goes to store staff, not to a specialist company.
       if (result.blocked.cause) result.blocked.hand_off = "staff";
       return finalise(result);
@@ -655,6 +686,7 @@
 
     // --- Notices (SR-02, SR-05, NFR-05) -------------------------------------
     result.notices.push({ id: "estimates", rule_id: "NFR-05" });
+    if (result.worst_case) result.notices.push({ id: "worst_case", rule_id: "SR-14", kg: result.worst_case.load_kg });
     if (result.method.penetrates_wall) {
       result.notices.push({ id: "detector_limits", rule_id: "SR-05" });
       result.notices.push({ id: "no_wall_certification", rule_id: "SR-02" });
@@ -686,7 +718,20 @@
       result.total.reason = "unclear_pack";
     } else {
       result.state = "validated";
-      result.total.amount = round(buy.reduce((s, i) => s + i.line_price, 0));
+    }
+    // FR-34 (D-3): subtotal per section; owned parts are not counted. A section
+    // with an unresolved item or an unclear pack/price has no subtotal (RB-13).
+    ["materials", "tools", "safety"].forEach((sec) => {
+      const inSec = buy.filter((i) => i.section === sec);
+      if (!inSec.length) return;
+      const bad = inSec.find((i) => i.status !== "ok" || i.line_price === null);
+      result.subtotals[sec] = bad
+        ? { amount: null, reason: bad.status !== "ok" ? "unresolved_items" : "unclear_pack" }
+        : { amount: round(inSec.reduce((sum, i) => sum + i.line_price, 0)), reason: null };
+    });
+    // The total is the sum of the section subtotals (so they always add up, RB-24).
+    if (result.state === "validated" && !result.total.reason) {
+      result.total.amount = round(Object.values(result.subtotals).reduce((sum, x) => sum + x.amount, 0));
     }
     log(ctx, "SR-03", "final state", result.state + (result.total.reason ? " (" + result.total.reason + ")" : ""), tplSource);
     return finalise(result);

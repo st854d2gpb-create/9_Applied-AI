@@ -89,6 +89,20 @@
       "help": {
         "en": "Round up if in doubt. Books weigh about 1 kg per 4 cm of shelf.",
         "de": "Im Zweifel aufrunden. Bücher wiegen ca. 1 kg je 4 cm Regalbreite."
+      },
+      "estimate": {
+        "comment": "D-2 (29 Oct 2026) \"estimate for me\": books rule from the help text above – estimate, team review (SR-10). Shown as estimate; counts only after the customer confirms.",
+        "rule_id": "SHELF-E1",
+        "basis_fact": "shelf_length_cm",
+        "basis_unit": "cm",
+        "basis_min": 10,
+        "basis_max": 300,
+        "kg_per_unit": 0.25,
+        "label": { "en": "Shelf length", "de": "Regallänge" },
+        "explain": {
+          "en": "Books: about 1 kg per 4 cm of shelf. Heavier things (tins, tools)? Then weigh them. Please check the value and confirm.",
+          "de": "Bücher: ca. 1 kg je 4 cm Regal. Schwerere Dinge (Dosen, Werkzeug)? Dann bitte wiegen. Bitte Wert prüfen und bestätigen."
+        }
       }
     },
     {
