@@ -6,6 +6,14 @@ when they are released to `main`.
 
 ## Unreleased
 
+- **2026-10-31 – Competitor analysis.** New `docs/competitor-analysis.md`: German
+  DIY market figures (BHB 2025), direct competitors (Home Depot, Lowe's, Kingfisher,
+  OBI, Hornbach, Bauhaus, toom), indirect competitors, a feature comparison and what
+  it means for our pitch, with sources. README folder table lists `docs/`.
+  *Why:* the team needs to know the competitors and their strategies for the pitch.
+  *Prompt:* "Run market research on our competitors and their strategies; put
+  everything in an md file under docs."
+
 ## Milestone: Shopping by aisle – 2026-10-31
 Summary (same as the pull request):
 - Orange button "Start shopping by aisle" under the list opens a new screen: the checked list of the chosen store grouped by aisle (ascending) and shelf
