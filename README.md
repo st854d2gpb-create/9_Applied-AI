@@ -85,7 +85,9 @@ darker shades (#E05A00 for large bold text, #C85000 for normal text).
 3. **Project:** describe it (type or 🎤) or tap one of the 9 project buttons (grouped, with safety level).
 4. **Check:** "Did we understand you correctly?" – recognised values are guesses.
 5. **Questions (max. 3 screens):** e.g. wall type, weight, sizes, condition checklists (mould, used-item defects) – guesses are pre-filled, you confirm by tapping. Stop rules from the catalogue (ST-01…ST-14) end the flow with a hand-off to staff or a specialist.
-6. **List:** tick items off, mark parts you **already have** ("I already have this" – not counted; never for plugs and screws; a used load-bearing part with a reported defect stays on the list), change a variant, change your answers, change or add a store, open the OBI how-to links (projects 5–9). "Why these products?" opens the evidence log.
+   **Weight (D-2, FR-04, SR-14):** "I know it", "Weigh it" (bathroom-scale tip), "Estimate for me" (shelf only: 1 kg per 4 cm of shelf for books, rule SHELF-E1 – shown as estimate, counts only after "Confirm") or "I don't know". *I don't know* plans for the project's worst case = its highest allowed load (shelf 50 kg, cabinet 50 kg, picture 25 kg, sliding door 60 kg; team decision 31 Oct 2026). If that worst case is above the wall's limit or no part can carry it, the app stops with ST-05 "please weigh it or ask OBI staff".
+6. **List:** mark parts you **already have** ("I already have this" – the item stays visible, marked, and is not counted; never for plugs and screws; a used load-bearing part with a reported defect stays on the list; own tools and safety gear get the hint "Keep the right tool and gear to ensure safety.", SR-17). Each section shows its **subtotal**; the total is the sum of the subtotals (FR-34). There is no tick box any more (D-3). Change a variant, your answers or the store, open the OBI how-to links (projects 5–9). "Why these products?" opens the evidence log.
+7. **Save list (FR-17, DR-06):** "Save list" downloads a text file with products, quantities, prices, section subtotals and total, items you already have, aisle/shelf/stock of the chosen store, product warnings, safety notes and how-to links. It is built on the device – nothing is sent, your postcode is not in the file. Where the browser supports it, "Share list" opens the phone's share sheet with the same file.
 
 ## AI adapter modes (`aiMode` in `app/config.js`)
 | Mode | What it does | Cost |
@@ -162,7 +164,7 @@ repository's `data/` folder – so serve the **repository root**:
 ```bash
 python3 -m http.server 8000          # in the repository root
 # app:   http://localhost:8000/app/
-# tests: http://localhost:8000/app/tests.html   (summary at the top: 101 tests)
+# tests: http://localhost:8000/app/tests.html   (summary at the top: 105 tests)
 ```
 `tests.html` runs all automated tests in the browser against the real data files,
 fixture copies of the catalogue, the AI `mock` mode and a simulated Web Speech API.
@@ -286,6 +288,10 @@ usability test or by hand.
 | **NFR-09** German and English | `i18n.js`, `de-DE`/`en-US`, number words | NFR-09 (×2), NFR-09 (speech) |
 | **NFR-10** data in files | Excel and CSV in `data/`, JSON in `app/data/` | DR-01, DR-04 / SR-10 |
 | **DR-01** single Excel file (incl. former DR-02, DR-03) | `data.js` + SheetJS reads `data/product_catalogue.xlsx`; "sample" labels | DR-01, RB-06, RB-15, NFR-05 |
+| **FR-17, DR-06** save the list on the device | `buildListText`, `saveList` (local .txt, optional share sheet) | TC-100 / TC-101 / FR-17 / DR-06 |
+| **FR-34** section subtotals | `subtotals` in `rules.js`, total = sum of subtotals | TC-102 / FR-34 / RB-24 |
+| **FR-04, SR-14** weight answers, worst case | weight help in `app.js`, worst case in `rules.js` (ST-05) | TC-104 / FR-04 / SR-14, SR-14 / RB-23 |
+| **SR-17** hint for own tools / gear | list item view | TC-103 / SR-17 |
 | **DR-04** 9 project templates (project catalogue) | `templates/*.json`, stop rules, owned parts (C-8), how-to links | DR-04 / SR-10, DR-04 (catalogue), PRJ-02…PRJ-09, C-8 / SR-15, C-7 (UI), C-8 (UI), NFR-07 (how-to links) |
 | **DR-05** schema-validated AI | `validateOutput`, structured output in the proxy | DR-05, FR-03 / DR-05 |
 | **DR-07** evidence log | `evidence` per check and product | DR-07 |
@@ -320,10 +326,10 @@ usability test or by hand.
 Sample catalogue (105 products), invented prices, stock and aisle positions, 5 sample
 stores in a fictional partnership scenario (addresses and opening hours to be verified
 by the team), approximate PLZ distances, 9 project templates not yet reviewed by the team.
-Open points from the project catalogue: wall type "wood" is not offered yet (no wood
-fixings in the catalogue); the load help "estimate for me" (C-7) is not built – only
-"I know it" / "I don't know"; owned parts are ticked off in the list instead of a
-separate question screen; cavity anchors and anchor bolts are assumed to bring their
+Open points from the project catalogue: wall type "wood" and fixings for aerated
+concrete (D-5) are not built yet – the catalogue has no wood or aerated-concrete
+fixings; the 6th store Schwabach (D-11) is not in the data yet; "estimate for me" exists
+only for the shelf (other projects: no team estimate rule yet); cavity anchors and anchor bolts are assumed to bring their
 own screw; the sliding-door plug (10 mm, 50 kg) limits the door to 40 kg although the
 catalogue allows 60 kg (every part must carry the whole load × 1.25, SR-04).
 Sliding door sizes: the door leaf must be at least 6 cm wider and 3 cm taller than

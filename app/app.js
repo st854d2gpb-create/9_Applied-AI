@@ -417,7 +417,11 @@
         values.push(v);
       }
       // Every answer given by tap is "user-confirmed" (SR-01).
-      values.forEach((v) => { state.facts[v.fact] = R.makeFact(v.value, R.STATUS.CONFIRMED, "question:" + q.id); });
+      values.forEach((v) => {
+        state.facts[v.fact] = R.makeFact(v.value, R.STATUS.CONFIRMED, v.source || "question:" + q.id);
+        // D-2: a value typed for the estimate (e.g. shelf length) is confirmed too
+        (v.extra || []).forEach((x) => { state.facts[x.fact] = R.makeFact(x.value, R.STATUS.CONFIRMED, "question:" + q.id); });
+      });
       afterFactsChanged();
     };
     form.addEventListener("submit", submit);
@@ -480,7 +484,10 @@
       value: current !== null && current !== R.UNKNOWN_VALUE ? String(current) : ""
     });
     const row = el("div", { class: "number-row" }, [input, f.unit ? el("span", { class: "unit", text: f.unit }) : null]);
+    // D-2 (FR-04, SR-14): weight answers "I know it" / "weigh it" / "estimate for me" / "I don't know"
+    const weight = f.fact === "load_kg" && f.allow_unknown ? weightHelp(f, input, box) : null;
     box.appendChild(row);
+    if (weight) box.appendChild(weight.after);
     let unknown = false;
     if (f.allow_unknown) {
       box.appendChild(el("button", {
@@ -490,13 +497,71 @@
     }
     form.appendChild(box);
     return () => {
-      if (unknown) return { fact: f.fact, value: R.UNKNOWN_VALUE };
+      if (unknown) return { fact: f.fact, value: R.UNKNOWN_VALUE, source: "question:answer:dont_know" };
       // Validation in code: comma or dot decimal, within template range.
       const raw = input.value.trim().replace(",", ".");
       const n = Number(raw);
       const ok = raw !== "" && Number.isFinite(n) && n >= f.min && n <= f.max && (!f.integer || Number.isInteger(n));
-      return ok ? { fact: f.fact, value: n } : { error: t("value_required", { min: f.min, max: f.max }) };
+      if (!ok) return { error: t("value_required", { min: f.min, max: f.max }) };
+      const est = weight && weight.estimate();
+      return est && est.value === n
+        ? { fact: f.fact, value: n, source: "question:estimate:" + est.rule_id, extra: est.extra }
+        : { fact: f.fact, value: n, source: weight && weight.mode() === "weigh" ? "question:weighed" : undefined };
     };
+  }
+
+  /**
+   * D-2: help for the weight question. Returns { after, mode(), estimate() }.
+   * "Estimate for me" is offered only where the template has an estimate rule
+   * (shelf: books per cm, team decision 31 Oct 2026). The estimate fills the
+   * field, is labelled as an estimate and counts only after "Confirm".
+   */
+  function weightHelp(f, input, box) {
+    let mode = "know", est = null;
+    const tip = el("p", { class: "hint", "data-weight-tip": "1", hidden: true, text: t("weight_weigh_tip") });
+    const estBox = el("div", { class: "estimate-box", "data-estimate-box": "1", hidden: true });
+    const estNote = el("p", { class: "guess", "data-estimate-note": "1" });
+    const rule = f.estimate || null;
+    if (rule) {
+      const known = state.facts[rule.basis_fact];
+      const basis = el("input", { type: "text", inputmode: "decimal", autocomplete: "off", class: "input", id: "in-estimate-basis",
+        "aria-label": pick(rule.label), value: known && known.value !== R.UNKNOWN_VALUE ? String(known.value) : "" });
+      const calc = () => {
+        const n = Number(basis.value.trim().replace(",", "."));
+        if (!Number.isFinite(n) || n < rule.basis_min || n > rule.basis_max) {
+          est = null;
+          estNote.textContent = t("value_required", { min: rule.basis_min, max: rule.basis_max });
+          return;
+        }
+        const kg = Math.ceil(n * rule.kg_per_unit);
+        est = { value: kg, rule_id: rule.rule_id, extra: [{ fact: rule.basis_fact, value: n }] };
+        input.value = String(kg);
+        estNote.replaceChildren(el("span", { class: "tag estimate", text: t("qty_estimate") }),
+          el("span", { text: " " + t("weight_estimate_result", { kg, basis: n, unit: rule.basis_unit, rule: rule.rule_id }) + " " + pick(rule.explain) }));
+      };
+      estBox.append(el("label", { for: "in-estimate-basis", class: "field-label", text: pick(rule.label) }),
+        el("div", { class: "number-row" }, [basis, el("span", { class: "unit", text: rule.basis_unit }),
+          el("button", { type: "button", class: "btn small", id: "estimate-run", text: t("weight_estimate_run"), onclick: calc })]),
+        estNote);
+    }
+    input.addEventListener("input", () => { if (est && Number(input.value.replace(",", ".")) !== est.value) est = null; });
+    const modes = [["know", t("weight_know")], ["weigh", t("weight_weigh")]].concat(rule ? [["estimate", t("weight_estimate")]] : []);
+    const group = el("div", { class: "choices weight-modes", role: "radiogroup", "aria-label": t("weight_how") });
+    const set = (m) => {
+      mode = m;
+      tip.hidden = m !== "weigh";
+      estBox.hidden = m !== "estimate";
+      if (m !== "estimate") est = null;
+      group.querySelectorAll(".choice").forEach((c) => {
+        const on = c.getAttribute("data-mode") === m;
+        c.classList.toggle("selected", on);
+        c.setAttribute("aria-checked", on ? "true" : "false");
+      });
+    };
+    modes.forEach(([m, label]) => group.appendChild(el("button", { type: "button", class: "btn choice" + (m === "know" ? " selected" : ""),
+      role: "radio", "aria-checked": m === "know" ? "true" : "false", "data-mode": m, text: label, onclick: () => set(m) })));
+    box.appendChild(group);
+    return { after: el("div", {}, [tip, estBox]), mode: () => mode, estimate: () => (mode === "estimate" ? est : null) };
   }
 
   /**
@@ -567,7 +632,9 @@
       return v.map((o) => (f ? optionLabel(f, o) : String(o))).join(", ");
     }
     if (key === "wall_type") return t("wall_" + v);
+    if (key === "load_kg" && v === R.UNKNOWN_VALUE) return t("load_unknown_worst");
     if (v === R.UNKNOWN_VALUE) return t("dont_know");
+    if (key === "load_kg" && String(fact.source || "").includes(":estimate:")) return v + " kg (" + t("qty_estimate") + ")";
     if (f && f.option_labels && f.option_labels[v]) return pick(f.option_labels[v]);
     const units = { load_kg: "kg", shelf_length_cm: "cm", shelf_depth_cm: "cm" };
     const unit = f && f.unit ? f.unit : units[key];
@@ -626,12 +693,14 @@
       load_over_limit: t("stop_load_over_limit", { load: b.load_kg, limit: b.limit_kg }),
       wall_limit: t("stop_wall_limit", { load: b.load_kg, limit: b.limit_kg, wall: t("wall_" + b.wall) }),
       no_suitable_system: t("stop_no_suitable_system"),
-      invalid_value: t("stop_invalid_value")
+      invalid_value: t("stop_invalid_value"),
+      worst_case_over_limit: t("stop_worst_case", { kg: b.load_kg })
     }[b.reason];
     const help = size ? t("stop_no_size_help") : b.help ? pick(b.help) : {
       fact_unknown: t("stop_fact_unknown_help"),
       wall_limit: t("stop_wall_limit_help"),
-      no_suitable_system: t("stop_no_suitable_system_help")
+      no_suitable_system: t("stop_no_suitable_system_help"),
+      worst_case_over_limit: t("stop_worst_case_help")
     }[b.reason];
     box.appendChild(el("p", { class: "stop-main", text: mainText }));
     if (help) box.appendChild(el("p", { text: help }));
@@ -696,7 +765,7 @@
 
     // Safety notices first (SR-05, SR-02)
     r.notices.filter((n) => n.id !== "estimates").forEach((n) => {
-      box.appendChild(el("p", { class: "notice safety", "data-notice": n.id, text: n.text ? pick(n.text) : t("notice_" + n.id) }));
+      box.appendChild(el("p", { class: "notice safety", "data-notice": n.id, text: n.text ? pick(n.text) : t("notice_" + n.id, n) }));
     });
 
     ["materials", "tools", "safety"].forEach((section) => {
@@ -706,6 +775,14 @@
       const ul = el("ul", { class: "items" });
       items.forEach((i) => ul.appendChild(viewItem(i)));
       box.appendChild(ul);
+      // FR-34 (D-3): subtotal per section; owned parts are not counted
+      const st = r.subtotals && r.subtotals[section];
+      if (st) {
+        box.appendChild(el("p", { class: "subtotal", "data-subtotal": section, "data-amount": st.amount === null ? "none" : String(st.amount) },
+          st.amount !== null
+            ? [el("span", { class: "subtotal-label", text: t("subtotal", { section: t("section_" + section) }) }), priceEl(st.amount, "subtotal-value")]
+            : [el("span", { class: "muted", text: t("subtotal_none", { section: t("section_" + section) }) })]));
+      }
     });
 
     // Total only when every pack size and price is clear (RB-13)
@@ -714,6 +791,7 @@
         ? [el("span", { class: "total-label", text: t("total") }), priceEl(r.total.amount, "total-value")]
         : [el("span", { text: t("total_" + r.total.reason) })]));
     box.appendChild(el("p", { class: "notice", text: t("notice_estimates") }));
+    box.appendChild(viewSave(r));
     const howto = viewHowto(state.template);
     if (howto) box.appendChild(howto);
     // NFR-05 / SR-10: how this list was made and the template's review status
@@ -750,6 +828,10 @@
         li.appendChild(el("p", { class: "warn-text", "data-owned-check": "1",
           text: i.required_rating_kg !== null ? t("owned_check_rating", { kg: i.required_rating_kg }) : t("owned_check_condition") }));
       }
+      // SR-17 (D-3): own tools and safety gear
+      if (i.section === "tools" || i.section === "safety") {
+        li.appendChild(el("p", { class: "hint", "data-owned-gear-hint": "1", text: t("owned_gear_hint") }));
+      }
       const b = ownedButton(i);
       if (b) li.appendChild(b);
       return li;
@@ -762,17 +844,10 @@
       if (b) li.appendChild(b);
       return li;
     }
-    const id = "chk-" + i.role;
-    const head = el("div", { class: "item-head" }, [
-      el("input", { type: "checkbox", id, class: "check", checked: state.checked.has(p.product_nr),
-        onchange: (e) => { e.target.checked ? state.checked.add(p.product_nr) : state.checked.delete(p.product_nr); li.classList.toggle("done", e.target.checked); } }),
-      el("label", { for: id, class: "item-name" }, [
-        el("span", { text: productName(p) }), el("span", { class: "muted", text: " · " + p.size }),
-        el("span", { class: "sr-only", text: " – " + t("checked_off") })
-      ])
-    ]);
-    li.appendChild(head);
-    if (state.checked.has(p.product_nr)) li.classList.add("done");
+    // D-3 (29 Oct 2026): no tick box any more – only "I already have this" (FR-07).
+    li.appendChild(el("p", { class: "item-name" }, [
+      el("span", { text: productName(p) }), el("span", { class: "muted", text: " · " + p.size })
+    ]));
 
     const q = i.quantity;
     const qtyText = q.clear
@@ -885,6 +960,109 @@
     box.appendChild(ul);
     box.appendChild(el("p", { class: "muted small", text: t("howto_note") }));
     return box;
+  }
+
+  // ---------------------------------------------------------------------
+  // FR-17 / DR-06 (D-1): save the list as a file on the device
+  // ---------------------------------------------------------------------
+  /**
+   * Plain text of the complete list, in the UI language: products, quantities,
+   * prices, section subtotals and total, items marked "I already have this",
+   * aisle/shelf/stock of the chosen store, product warnings, safety notes and
+   * how-to links. The customer's PLZ is never included (the store address is
+   * written without its postcode). Built on the device – nothing is sent.
+   */
+  function buildListText(r) {
+    const fmt = (n) => window.BBI18n.formatPrice(n);
+    const tpl = state.template;
+    const store = state.storeId ? state.data.stores.find((x) => x.store_id === state.storeId) : null;
+    const L = [];
+    L.push("Baumarkt-Buddy – " + pick(tpl.title));
+    L.push(new Date().toISOString().slice(0, 10) + " · " + t("save_sample_note"));
+    L.push(store ? t("store_selected") + ": " + store.name + (store.street ? ", " + store.street : "") + (store.city ? ", " + store.city : "")
+      : t("save_no_store"));
+    L.push("");
+    L.push(t("facts_title") + ":");
+    tpl.questions.forEach((q) => (q.type === "group" ? q.fields.map((f) => f.fact) : [q.fact]).forEach((k) => {
+      if (state.facts[k]) L.push("- " + factName(k, tpl) + ": " + factLabel(k, state.facts[k], tpl));
+    }));
+    ["materials", "tools", "safety"].forEach((section) => {
+      const items = r.items.filter((i) => i.section === section);
+      if (!items.length) return;
+      L.push("");
+      L.push("== " + t("section_" + section) + " ==");
+      items.forEach((i) => {
+        const p = i.product;
+        if (!p) { L.push("- " + pick(i.label) + " – " + t("unresolved_item")); return; }
+        let line = "- " + productName(p) + " · " + p.size + " (" + p.product_nr + ")";
+        if (i.owned) {
+          line += " – " + t("owned_tag") + " (" + t("save_not_counted") + ")";
+          L.push(line);
+          if (i.section === "tools" || i.section === "safety") L.push("  " + t("owned_gear_hint"));
+          return;
+        }
+        const q = i.quantity;
+        line += " – " + (q.clear ? t("qty_packs", { packs: q.packs }) + (q.pack_qty > 1 ? " (" + t("qty_need", { units: q.units }) + ")" : "") : t("qty_unclear"));
+        line += " – " + (p.price_eur !== null ? fmt(p.price_eur) + " " + t("per_pack") : t("price_unknown"));
+        if (i.line_price !== null) line += " – " + t("line_total", { price: fmt(i.line_price) });
+        L.push(line);
+        const si = R.storeInfo(state.data.stock, state.storeId, p.product_nr);
+        const na = t("not_available");
+        L.push("  " + t("aisle") + ": " + (si.aisle_nr === null ? na : si.aisle_nr + (si.aisle_name ? " (" + si.aisle_name + ")" : "")) +
+          " · " + t("shelf") + ": " + (si.shelf_nr === null ? na : si.shelf_nr) + " · " + t("stock") + ": " + (si.stock_qty === null ? na : si.stock_qty));
+        const av = R.availability(state.data.stock, state.data.stores, state.storeId, p.product_nr, state.storeOrigin, CFG.store);
+        if (av.status === "out_of_stock" || av.status === "not_carried") {
+          L.push("  " + (av.referral ? t("avail_referral", { store: av.referral.store.name, km: formatKm(av.referral.km) }) : t("avail_ask_staff")));
+        }
+        if (i.safety_note) L.push("  " + t("manufacturer_note") + ": " + i.safety_note); // SR-07: unchanged
+      });
+      const st = r.subtotals && r.subtotals[section];
+      if (st) L.push(st.amount !== null ? t("subtotal", { section: t("section_" + section) }) + ": " + fmt(st.amount) : t("subtotal_none", { section: t("section_" + section) }));
+    });
+    L.push("");
+    L.push(r.total.amount !== null ? t("total") + ": " + fmt(r.total.amount) : t("total_" + r.total.reason));
+    const notes = r.notices.filter((n) => n.id !== "estimates").map((n) => (n.text ? pick(n.text) : t("notice_" + n.id, n)));
+    if (notes.length) { L.push(""); L.push(t("save_safety_title") + ":"); notes.forEach((n) => L.push("- " + n)); }
+    const links = ((tpl && tpl.howto) || []).map((h) => ({ h, url: safeHowtoUrl(h.url) })).filter((x) => x.url);
+    if (links.length) { L.push(""); L.push(t("howto_title") + ":"); links.forEach((x) => L.push("- " + pick(x.h.title) + ": " + x.url)); }
+    L.push("");
+    L.push(t("notice_estimates"));
+    L.push(t("footer"));
+    return L.join("\n") + "\n";
+  }
+
+  function saveFileName() {
+    return "baumarkt-buddy_" + state.template.template_id + "_" + new Date().toISOString().slice(0, 10) + ".txt";
+  }
+
+  /** Download the list as a .txt file (no network, DR-06). */
+  function saveList(r) {
+    const blob = new Blob([buildListText(r)], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = el("a", { href: url, download: saveFileName() });
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    return true;
+  }
+
+  /** Share the same file via the phone's share sheet, where the browser supports it. */
+  async function shareList(r) {
+    const file = new File([buildListText(r)], saveFileName(), { type: "text/plain" });
+    try { await navigator.share({ files: [file], title: "Baumarkt-Buddy – " + pick(state.template.title) }); } catch (_) { /* cancelled */ }
+  }
+
+  function viewSave(r) {
+    let canShare = false;
+    try { canShare = !!(navigator.canShare && navigator.canShare({ files: [new File(["x"], "x.txt", { type: "text/plain" })] })); } catch (_) { canShare = false; }
+    return el("div", { class: "save-box", "data-save": "1" }, [
+      el("div", { class: "actions" }, [
+        el("button", { type: "button", class: "btn primary", id: "save-list", text: t("save_list"), onclick: () => saveList(r) }),
+        canShare ? el("button", { type: "button", class: "btn", id: "share-list", text: t("share_list"), onclick: () => shareList(r) }) : null
+      ]),
+      el("p", { class: "muted small", text: t("save_privacy") })
+    ]);
   }
 
   // Evidence log (DR-07)
@@ -1166,7 +1344,7 @@
   window.BBApp = Object.freeze({
     state, viewResult, viewItem, viewQuestion, viewChoose, viewRecognized, viewHighRisk,
     recompute, startTemplate, submitText, micTap, consentAccept, consentDecline,
-    viewStore, viewList, openStoreSearch, searchStores, chooseStore, leaveStoreSearch
+    viewStore, viewList, openStoreSearch, searchStores, chooseStore, leaveStoreSearch, buildListText, saveList
   });
 
   document.addEventListener("DOMContentLoaded", () => {

@@ -1388,7 +1388,7 @@
     } finally { window.BBI18n.setLang("en"); }
   });
 
-  test("SR-14 / RB-23", "Load 'I don't know' → stop (fact unknown) in every project with a load question; no plugs, no list", () => {
+  test("SR-14 / RB-23", "Load 'I don't know' → worst case (project maximum): never a list sized below it; above the limit → ST-05 weigh / ask staff (D-2)", () => {
     const cases = [
       [SHELF(), Object.assign({}, SHELF_OK)],
       [PIC(), { wall_type: "concrete", picture_count: 1, points_per_picture: 1 }],
@@ -1397,9 +1397,153 @@
     ];
     cases.forEach(([t, f]) => {
       const r = run(t, confirmed(Object.assign(f, { load_kg: R.UNKNOWN_VALUE })));
-      eq([r.state, r.blocked.reason, r.items.length], ["safety_blocked", "fact_unknown", 0], t.template_id);
-      assert(r.blocked.facts.includes("load_kg"), t.template_id + " names the load");
+      assert(r.worst_case && r.worst_case.load_kg === t.max_load_kg, t.template_id + " uses the project maximum " + t.max_load_kg);
+      assert(!(r.blocked && r.blocked.reason === "fact_unknown"), t.template_id + " no longer stops only because the weight is unknown");
+      if (r.state === "safety_blocked") {
+        assert(["worst_case_over_limit", "stop_rule", "no_suitable_system"].includes(r.blocked.reason), t.template_id + " " + r.blocked.reason);
+        if (r.blocked.reason === "worst_case_over_limit") eq(r.blocked.rule_id, "ST-05");
+        eq(r.items.length, 0, t.template_id + " no list");
+      } else {
+        // a list must carry the worst case: every load-bearing part rated for worst × factor
+        r.items.filter((i) => i.load_bearing && i.product && i.product.max_load_kg !== null).forEach((i) =>
+          assert(i.product.max_load_kg >= t.max_load_kg * t.safety_factor, t.template_id + " " + i.role + " rated " + i.product.max_load_kg));
+        assert(r.notices.some((n) => n.id === "worst_case"), t.template_id + " says it planned for the worst case");
+      }
     });
+    // Shelf: worst case 50 kg cannot be planned → ST-05 with the weigh / ask-staff help
+    const shelf = run(SHELF(), confirmed(Object.assign({}, SHELF_OK, { load_kg: R.UNKNOWN_VALUE })));
+    eq([shelf.blocked.reason, shelf.blocked.rule_id], ["worst_case_over_limit", "ST-05"]);
+    const box = document.getElementById("sandbox");
+    window.BBApp.state.result = shelf; window.BBApp.state.template = SHELF();
+    box.replaceChildren(window.BBApp.viewResult());
+    assert(box.querySelector('[data-reason="worst_case_over_limit"]').textContent.includes("50"), "stop names the worst case");
+  });
+
+  test("TC-104 / FR-04 / SR-14", "Weight answers: weigh-it tip, shelf estimate (labelled, counts only after Confirm), I don't know", () => {
+    const s = window.BBApp.state;
+    s.data = D;
+    window.BBApp.startTemplate(SHELF(), {});
+    s.facts.wall_type = R.makeFact("concrete", R.STATUS.CONFIRMED, "test");
+    window.BBApp.recompute(true);
+    eq(s.questionId, "Q2", "weight question");
+    const box = document.getElementById("sandbox");
+    box.replaceChildren(window.BBApp.viewQuestion());
+    const modes = [...box.querySelectorAll("[data-mode]")].map((b) => b.getAttribute("data-mode"));
+    eq(modes, ["know", "weigh", "estimate"]);
+    box.querySelector('[data-mode="weigh"]').click();
+    assert(!box.querySelector("[data-weight-tip]").hidden, "bathroom-scale tip shown");
+    box.querySelector('[data-mode="estimate"]').click();
+    box.querySelector("#in-estimate-basis").value = "80";
+    box.querySelector("#estimate-run").click();
+    eq(box.querySelector("#in-load_kg").value, "20", "80 cm × 0.25 kg = 20 kg");
+    assert(box.querySelector("[data-estimate-note] .tag.estimate"), "labelled as estimate");
+    eq(s.facts.load_kg, undefined, "not used before Confirm");
+    box.querySelector("form").requestSubmit();
+    eq(s.facts.load_kg.value, 20);
+    eq(s.facts.load_kg.status, R.STATUS.CONFIRMED);
+    assert(s.facts.load_kg.source.includes("estimate:SHELF-E1"), "source: estimate");
+    eq(s.facts.shelf_length_cm.value, 80, "length typed for the estimate is kept");
+    // Same list as typing 20 kg
+    s.facts.shelf_depth_cm = R.makeFact(25, R.STATUS.CONFIRMED, "test");
+    window.BBApp.recompute(true);
+    eq(nrs(s.result), nrs(run(SHELF(), confirmed(SHELF_OK))), "same list as typing the value");
+    // Projects without an estimate rule offer no estimate button
+    window.BBApp.startTemplate(PIC(), {});
+    s.facts.wall_type = R.makeFact("concrete", R.STATUS.CONFIRMED, "test");
+    window.BBApp.recompute(true);
+    box.replaceChildren(window.BBApp.viewQuestion());
+    eq([...box.querySelectorAll("[data-mode]")].map((b) => b.getAttribute("data-mode")), ["know", "weigh"]);
+  });
+
+  test("TC-102 / FR-34 / RB-24", "Section subtotals add up to the total; an owned drill lowers Tools and total, undo restores them", () => {
+    const base = run(SHELF(), confirmed(SHELF_OK));
+    const sum = Object.values(base.subtotals).reduce((a, x) => a + x.amount, 0);
+    eq(Math.round(sum * 100) / 100, base.total.amount, "total = sum of subtotals");
+    eq(Object.keys(base.subtotals).sort(), ["materials", "safety", "tools"]);
+    const drill = item(base, "drill");
+    const owned = run(SHELF(), confirmed(SHELF_OK), null, { owned: ["drill"] });
+    eq(owned.subtotals.tools.amount, Math.round((base.subtotals.tools.amount - drill.line_price) * 100) / 100, "Tools subtotal drops by the drill");
+    eq(owned.subtotals.materials, base.subtotals.materials, "other sections unchanged");
+    eq(owned.total.amount, Math.round((base.total.amount - drill.line_price) * 100) / 100, "total drops by the drill");
+    assert(item(owned, "drill") && item(owned, "drill").owned, "owned drill stays visible on the list");
+    eq(run(SHELF(), confirmed(SHELF_OK), null, { owned: [] }).total, base.total, "undo restores the total");
+    // RB-13: unclear pack size → no subtotal for that section and no total
+    const cat = fixture((byId) => { byId.P044.pack_qty = null; });
+    const unclear = run(SHELF(), confirmed(SHELF_OK), cat);
+    eq(unclear.subtotals.materials.amount, null);
+    eq(unclear.total.amount, null);
+    // UI: subtotal lines, no tick box any more
+    const box = renderResult(SHELF(), confirmed(SHELF_OK), null);
+    eq(box.querySelectorAll("[data-subtotal]").length, 3, "one subtotal per section");
+    eq(box.querySelectorAll('.item input[type="checkbox"]').length, 0, "tick box removed (D-3)");
+  });
+
+  test("TC-103 / SR-17", "Own tool or safety gear → hint 'Keep the right tool and gear to ensure safety.'", () => {
+    const s = window.BBApp.state;
+    window.BBI18n.setLang("en");
+    renderResult(SHELF(), confirmed(SHELF_OK), null);
+    s.owned = new Set(["drill", "safety_glasses", "bracket"]);
+    s.result = R.evaluate(SHELF(), s.facts, D.catalogue, D.safetyRules, { owned: [...s.owned] });
+    const box = document.getElementById("sandbox");
+    box.replaceChildren(window.BBApp.viewResult());
+    ["drill", "safety_glasses"].forEach((role) => {
+      const hint = box.querySelector('[data-role="' + role + '"] [data-owned-gear-hint]');
+      assert(hint, "hint for " + role);
+      eq(hint.textContent, "Keep the right tool and gear to ensure safety.");
+    });
+    assert(!box.querySelector('[data-role="bracket"] [data-owned-gear-hint]'), "load-bearing part keeps its own check note instead");
+    assert(box.querySelector('[data-role="bracket"] [data-owned-check]'), "SR-15 check note");
+    s.owned = new Set();
+  });
+
+  test("TC-100 / TC-101 / FR-17 / DR-06", "Saved list file: products, prices, subtotals, total, owned items, store aisles, how-to links – no PLZ, nothing sent", async () => {
+    const s = window.BBApp.state;
+    window.BBI18n.setLang("en");
+    const point = R.checkPlz("91052", D.plzTable).point;
+    renderResult(SHELF(), confirmed(SHELF_OK), "ERL-OST", null, { origin: point });
+    s.plzInput = "91052";
+    s.owned = new Set(["drill"]);
+    s.result = R.evaluate(SHELF(), s.facts, D.catalogue, D.safetyRules, { owned: ["drill"] });
+    const txt = window.BBApp.buildListText(s.result);
+    const r = s.result;
+    r.items.filter((i) => !i.owned).forEach((i) => assert(txt.includes(i.product.product_nr), "product " + i.product.product_nr));
+    assert(txt.includes(window.BBI18n.formatPrice(r.total.amount)), "total");
+    Object.keys(r.subtotals).forEach((sec) => assert(txt.includes(window.BBI18n.formatPrice(r.subtotals[sec].amount)), "subtotal " + sec));
+    assert(/P040.*You have this/.test(txt), "owned drill marked");
+    const aisle = R.storeInfo(D.stock, "ERL-OST", "P049").aisle_nr;
+    assert(txt.includes("Aisle: " + aisle), "aisle of the chosen store");
+    assert(txt.includes("OBI Markt Erlangen-Ost"), "chosen store named");
+    assert(!txt.includes("91052"), "PLZ not in the file");
+    assert(txt.includes(D.catalogue.get("P034").safety_note), "manufacturer note unchanged (detector)");
+    assert(txt.includes(window.BBI18n.t("notice_detector_limits")), "detector notice");
+    // how-to links (a project with links, e.g. paint)
+    const tplWithLinks = D.templates.find((x) => (x.howto || []).length);
+    if (tplWithLinks) {
+      const saved = s.template; s.template = tplWithLinks;
+      const t2 = window.BBApp.buildListText(Object.assign({}, r, { items: [], subtotals: {} }));
+      assert(t2.includes("https://"), "how-to link in the file");
+      s.template = saved;
+    }
+    // Saving creates a local file only: no fetch / XHR / beacon
+    const calls = [];
+    const orig = { fetch: window.fetch, beacon: navigator.sendBeacon, open: XMLHttpRequest.prototype.open };
+    window.fetch = (...a) => { calls.push("fetch"); return orig.fetch.apply(window, a); };
+    navigator.sendBeacon = () => { calls.push("beacon"); return true; };
+    XMLHttpRequest.prototype.open = function () { calls.push("xhr"); return orig.open.apply(this, arguments); };
+    const clickOrig = HTMLAnchorElement.prototype.click;
+    let downloaded = null;
+    HTMLAnchorElement.prototype.click = function () { downloaded = { href: this.href, name: this.download }; };
+    try { window.BBApp.saveList(r); } finally {
+      HTMLAnchorElement.prototype.click = clickOrig;
+      window.fetch = orig.fetch; navigator.sendBeacon = orig.beacon; XMLHttpRequest.prototype.open = orig.open;
+    }
+    eq(calls, [], "nothing sent");
+    assert(downloaded && downloaded.href.startsWith("blob:") && /\.txt$/.test(downloaded.name), "local .txt file: " + JSON.stringify(downloaded));
+    // Without a store: aisle/shelf "not available" in the file
+    renderResult(SHELF(), confirmed(SHELF_OK), null);
+    const t3 = window.BBApp.buildListText(s.result);
+    assert(t3.includes(window.BBI18n.t("save_no_store")) && t3.includes("Aisle: not available"), "no-store file");
+    s.owned = new Set(); s.plzInput = "";
   });
 
   test("SR-16 / SR-09", "Basic projects get the high-risk filter too: 'paint the wall and move the socket' → professional stop", () => {

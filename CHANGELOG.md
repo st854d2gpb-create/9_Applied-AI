@@ -6,6 +6,35 @@ when they are released to `main`.
 
 ## Unreleased
 
+## Milestone: Team decisions D-1, D-2, D-3 – save list, weight answers, subtotals – 2026-10-31
+Summary (same as the pull request):
+- D-1 (FR-17, DR-06): "Save list" downloads the complete list as a text file on the device (optional share sheet); no PLZ, nothing sent
+- D-2 (FR-04, SR-14): weight answers "I know it", "Weigh it", "Estimate for me" (shelf) and "I don't know" → worst case = project maximum; above the limit → ST-05 weigh / ask staff
+- D-3 (FR-07, FR-34, SR-17): tick box removed; subtotal per section, total = sum of subtotals; hint for own tools and safety gear
+- Tests: RB-23 updated to the new expectation; TC-100…TC-104 automated (105 passing)
+
+- **2026-10-31 – Team decisions D-1, D-2 and D-3 implemented.**
+  *D-1:* `buildListText` / `saveList` in `app/app.js` – the list (products, quantities,
+  prices, subtotals, total, owned items, aisle/shelf/stock of the chosen store, product
+  warnings, safety notes, how-to links) is saved as a local `.txt` file; "Share list"
+  where the browser supports sharing files. The customer's PLZ is not included (store
+  address without postcode); no network request.
+  *D-2:* weight question offers "I know it", "Weigh it" (bathroom-scale tip), "Estimate
+  for me" (shelf only, books rule SHELF-E1 = 1 kg per 4 cm, from the existing help
+  text; labelled, used only after Confirm) and "I don't know". The rule engine then
+  uses the project's highest allowed load as worst case (team decision 31 Oct 2026)
+  and stops with ST-05 if the wall limit is lower or no part carries it; a list for the
+  worst case carries a notice.
+  *D-3:* the "in basket" tick box is removed; "I already have this" stays; section
+  subtotals (FR-34) and total = sum of subtotals (RB-24); hint "Keep the right tool and
+  gear to ensure safety." for own tools and safety gear (SR-17).
+  Tests: SR-14 / RB-23 rewritten for D-2; new TC-100/101, TC-102, TC-103, TC-104
+  (105 passing). README updated.
+  *Why:* team decisions of 29 Oct 2026 (requirements FR-04, FR-07, FR-17, FR-34,
+  SR-14, SR-17, DR-06); D-5 and D-11 wait for team data.
+  *Prompt:* "Yes, implement D-1, D-2 and D-3" (worst case = project maximum, estimate
+  only for the shelf with the books rule).
+
 ## Milestone: Dated test case copy moved to the archive – 2026-10-31
 Summary (same as the pull request):
 - `test/01_test_cases_2026-10-27.md` moved to `test/archive/`
