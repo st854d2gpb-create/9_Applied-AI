@@ -6,6 +6,12 @@ when they are released to `main`.
 
 ## Unreleased
 
+## Milestone: Competitor analysis – 2026-10-31
+Summary (same as the pull request):
+- New `docs/competitor-analysis.md`: German DIY market figures, direct and indirect competitors and their strategies
+- Feature comparison table and what it means for the Baumarkt Buddy pitch, with sources
+- README folder table lists `docs/`
+
 - **2026-10-31 – Competitor analysis.** New `docs/competitor-analysis.md`: German
   DIY market figures (BHB 2025), direct competitors (Home Depot, Lowe's, Kingfisher,
   OBI, Hornbach, Bauhaus, toom), indirect competitors, a feature comparison and what
