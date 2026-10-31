@@ -81,7 +81,7 @@ darker shades (#E05A00 for large bold text, #C85000 for normal text).
 
 ## Using the app
 A **progress bar** under the header shows where the customer is: **Store → Project →
-Questions → List** (done steps orange, current step bold). A safety stop turns the step
+Questions → List → Shopping** (done steps orange, current step bold). A safety stop turns the step
 where it happened red (e.g. "unknown wall" at Questions, high-risk work at Project).
 It is hidden on the start notice.
 
@@ -93,6 +93,7 @@ It is hidden on the start notice.
    **Weight (D-2, FR-04, SR-14):** "I know it", "Weigh it" (bathroom-scale tip), "Estimate for me" (shelf only: 1 kg per 4 cm of shelf for books, rule SHELF-E1 – shown as estimate, counts only after "Confirm") or "I don't know". *I don't know* plans for the project's worst case = its highest allowed load (shelf 50 kg, cabinet 50 kg, picture 25 kg, sliding door 60 kg; team decision 31 Oct 2026). If that worst case is above the wall's limit or no part can carry it, the app stops with ST-05 "please weigh it or ask OBI staff".
 6. **List:** mark parts you **already have** ("I already have this" – the item stays visible, marked, and is not counted; never for plugs and screws; a used load-bearing part with a reported defect stays on the list; own tools and safety gear get the hint "Keep the right tool and gear to ensure safety.", SR-17). Each section shows its **subtotal**; the total is the sum of the subtotals (FR-34). There is no tick box any more (D-3). Change a variant, your answers or the store, open the OBI how-to links (projects 5–9). "Why these products?" opens the evidence log.
 7. **Save list (FR-17, DR-06):** "Save list" downloads a text file with products, quantities, prices, section subtotals and total, items you already have, aisle/shelf/stock of the chosen store, product warnings, safety notes and how-to links. It is built on the device – nothing is sent, your postcode is not in the file. Where the browser supports it, "Share list" opens the phone's share sheet with the same file.
+8. **Shopping by aisle:** the orange button "Start shopping by aisle" under the list opens the same checked list sorted for the walk through the chosen store – grouped by aisle (ascending, numbered), within an aisle by shelf, with packs per item. Items you already have are left out; items the store cannot supply are listed under "Not on the route in this store" with the nearest store that has them or "please ask staff" (FR-31). Safety notices stay visible. Without a store the app asks for a postcode first. It only reorders the list – no tick boxes (D-3), no new decision.
 
 ## AI adapter modes (`aiMode` in `app/config.js`)
 | Mode | What it does | Cost |

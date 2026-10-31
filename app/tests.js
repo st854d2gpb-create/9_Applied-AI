@@ -1118,7 +1118,7 @@
     ["template", "mock", "proxy"].forEach((m) => assert(window.BBI18n.TEXTS.en["notice_ai_" + m] && window.BBI18n.TEXTS.de["notice_ai_" + m], "AI notice for mode " + m));
   });
 
-  test("NFR-05 (progress)", "Progress bar follows the flow: Store → Project → Questions → List; a safety stop is marked", () => {
+  test("NFR-05 (progress)", "Progress bar follows the flow: Store → Project → Questions → List → Shopping; a safety stop is marked", () => {
     const s = window.BBApp.state;
     s.data = D;
     const step = () => { const p = window.BBApp.progressStep(); return p ? p.step + (p.stop ? ":stop" : "") : null; };
@@ -1133,10 +1133,50 @@
     eq(step(), "list");
     renderResult(SHELF(), confirmed(Object.assign({}, SHELF_OK, { wall_type: "unknown" })), null); s.screen = "result";
     eq(step(), "questions:stop", "safety stop shown at the questions step");
+    s.screen = "shopping"; eq(step(), "shopping");
     const box = document.getElementById("sandbox");
     box.replaceChildren(window.BBApp.viewProgress({ step: "questions", stop: false }));
-    eq([...box.querySelectorAll("[data-progress]")].map((li) => li.className.replace("progress-step ", "")), ["done", "done", "current", "todo"]);
+    eq([...box.querySelectorAll("[data-progress]")].map((li) => li.className.replace("progress-step ", "")), ["done", "done", "current", "todo", "todo"]);
     eq(box.querySelector('[aria-current="step"]').getAttribute("data-progress"), "questions");
+  });
+
+  test("FR-11 / NFR-08 (shopping by aisle)", "List → \"Start shopping by aisle\": items of the chosen store sorted by aisle and shelf; owned and unavailable items handled; checks unchanged", () => {
+    const s = window.BBApp.state;
+    window.BBI18n.setLang("en");
+    let box = renderResult(SHELF(), confirmed(SHELF_OK), "ERL-OST");
+    const btn = box.querySelector("#start-shopping");
+    assert(btn, "button below the list");
+    eq(btn.textContent, window.BBI18n.t("shopping_start"));
+    const sig = (res) => JSON.stringify({ state: res.state, total: res.total, items: res.items.map((i) => [i.role, i.product && i.product.product_nr, i.quantity]) });
+    const before = sig(s.result);
+    s.owned = new Set(["drill"]);
+    s.result = R.evaluate(SHELF(), s.facts, D.catalogue, D.safetyRules, { owned: ["drill"] });
+    const route = window.BBApp.aisleRoute(s.result);
+    const nums = route.groups.map((g) => Number(g.aisle_nr));
+    eq(nums, nums.slice().sort((a, b) => a - b), "aisles ascending");
+    route.groups.forEach((g) => {
+      const sh = g.stops.map((x) => Number(x.shelf_nr));
+      eq(sh, sh.slice().sort((a, b) => a - b), "shelves ascending in aisle " + g.aisle_nr);
+      g.stops.forEach((x) => eq(String(R.storeInfo(D.stock, "ERL-OST", x.item.product.product_nr).aisle_nr), String(g.aisle_nr), "aisle from the chosen store"));
+    });
+    eq(route.owned, 1, "owned drill left out");
+    const onRoute = route.groups.reduce((n, g) => n + g.stops.length, 0);
+    eq(onRoute + route.off.length + route.owned, s.result.items.length, "every list item accounted for");
+    route.off.forEach(({ av }) => assert(!av || av.status !== "in_stock", "only unavailable items off the route"));
+    box.replaceChildren(window.BBApp.viewShopping());
+    eq(box.querySelectorAll("[data-route-aisle]").length, route.groups.length);
+    eq(box.querySelectorAll(".route-stop").length, onRoute);
+    assert(!box.querySelector('input[type="checkbox"]'), "no tick boxes (D-3)");
+    assert(box.querySelector("#back-to-list"), "back to the list");
+    // without a store: hint + postcode button, no route
+    s.storeId = null;
+    box.replaceChildren(window.BBApp.viewShopping());
+    assert(box.querySelector("[data-shopping-nostore]") && box.querySelector("#shopping-add-plz"), "asks for a store");
+    eq(box.querySelectorAll("[data-route-aisle]").length, 0);
+    // the route only reorders: the checked result is unchanged
+    s.owned = new Set();
+    renderResult(SHELF(), confirmed(SHELF_OK), "ERL-OST");
+    eq(sig(s.result), before, "same checked result");
   });
 
   test("NFR-09", "Every UI text exists in English and German", () => {

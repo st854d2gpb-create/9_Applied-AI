@@ -6,6 +6,20 @@ when they are released to `main`.
 
 ## Unreleased
 
+## Milestone: Shopping by aisle – 2026-10-31
+Summary (same as the pull request):
+- Orange button "Start shopping by aisle" under the list opens a new screen: the checked list of the chosen store grouped by aisle (ascending) and shelf
+- Owned items left out; unavailable items listed separately with the FR-31 referral or "ask staff"; without a store → postcode prompt
+- Progress bar gets a fifth step "Shopping"; 1 new test (107 passing)
+
+- **2026-10-31 – Shopping by aisle.** New `aisleRoute` / `viewShopping` in
+  `app/app.js` (screen `shopping`), button `#start-shopping` below the total, styles
+  `.btn.brand` (black text on #FF7313 for WCAG contrast) and `.route` in `app/style.css`,
+  texts EN/DE in `app/i18n.js`. The route only reorders the checked result (no tick
+  boxes, D-3). Progress bar extended to five steps (Shopping). README updated.
+  *Why:* in the store the customer wants to walk the aisles in order.
+  *Prompt:* "Please add a button 'Shopping by aisle' below our list."
+
 ## Milestone: Progress bar over the flow – 2026-10-31
 Summary (same as the pull request):
 - Progress bar under the header: Store → Project → Questions → List (done = orange, current = bold)
