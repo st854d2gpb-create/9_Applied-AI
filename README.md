@@ -25,7 +25,7 @@ refused with a referral to a professional.
 *Basic* projects ask no wall or load questions; the high-risk filter, catalogue
 check, product warnings and stop rules always run. Photo entry, saved projects,
 offline mode, store maps and step-by-step guides are planned for later releases
-([R2–R4 requirements](requirements/requirements-R2-R4_2026-10-27.md)).
+([R2–R4 requirements](requirements/requirements-R2-R4.md)).
 
 👉 **Live app:** `https://st854d2gpb-create.github.io/9_Applied-AI/` (after GitHub Pages is enabled, see below)
 

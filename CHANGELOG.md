@@ -6,6 +6,20 @@ when they are released to `main`.
 
 ## Unreleased
 
+## Milestone: Dated requirement copies moved to the archive – 2026-10-31
+Summary (same as the pull request):
+- `requirements-R1-MVP_2026-10-27.md` and `requirements-R2-R4_2026-10-27.md` moved to `requirements/archive/`
+- Links in README, `tpjm/change-proposal-R1.md` and `test/01_test_cases_2026-10-27.md` updated
+
+- **2026-10-31 – Moved the dated requirement copies to `requirements/archive/`.**
+  `git mv` keeps their history. The README now links the R2–R4 requirements to
+  `requirements/requirements-R2-R4.md`; the links in `tpjm/change-proposal-R1.md` and
+  the basis references in `test/01_test_cases_2026-10-27.md` point to the archive
+  path so they do not break. Older CHANGELOG entries keep their original wording.
+  *Why:* the team wants the dated copies out of the active requirements folder.
+  *Prompt:* "Move requirements-R2-R4_2026-10-27.md and requirements-R1-MVP_2026-10-27.md
+  to requirements/archive."
+
 ## Milestone: Typo-tolerant project recognition – 2026-10-28
 Summary (same as the pull request):
 - Misspelled project and wall words are recognised in keyword mode ("Regla", "Regall", "Bücherregla", "shefl", "Gipskarten") – still only a guess the customer confirms
