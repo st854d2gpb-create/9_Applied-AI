@@ -60,7 +60,7 @@ p{margin:0}
 
 /* title */
 .title h1{font-size:88.8px;letter-spacing:-.01em}
-.title h1 em{font-style:normal;background:var(--signal);color:var(--signal-ink);padding:0 .12em}
+.title h1 em{font-style:normal;background:var(--signal);color:var(--signal-ink);padding:0 .12em;display:inline-block;line-height:.84;padding-top:0;padding-bottom:.285em}
 .hook{font-family:var(--f-display);font-size:26.4px;font-weight:500;color:var(--muted)}
 .meta{display:flex;flex-wrap:wrap;gap:8px 22px;font-family:var(--f-mono);font-size:13px;color:var(--muted)}
 .ruler{height:14px;background:repeating-linear-gradient(90deg,var(--ink) 0 1px,transparent 1px 10px),
@@ -730,9 +730,25 @@ kbd{font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);border
 /* slide 10: highlighted block headings */
 .box>.kicker.hd{font-family:var(--f-display);font-size:20px;font-weight:700;letter-spacing:.02em;text-transform:none;color:var(--ink);border-bottom:3px solid var(--signal);padding-bottom:4px;margin-bottom:4px;align-self:flex-start}
 /* Q&A: QR code appears 2 s after the slide opens */
-@keyframes qrIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
+@keyframes qrIn{from{opacity:0;scale:.2}to{opacity:1;scale:1}}
 .slide.has-qr .qa-qr{opacity:0}
-.slide.has-qr.on .qa-qr{animation:qrIn .6s ease 2s forwards}
+.slide.has-qr.on .qa-qr{animation:qrIn .6s cubic-bezier(.2,.9,.3,1.15) .4s forwards}
+/* title: faded background image behind the original title */
+.slide.cover{position:relative;overflow:hidden;isolation:isolate}
+.cover-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;z-index:-1;pointer-events:none;
+  opacity:.28;-webkit-mask-image:linear-gradient(90deg,transparent 0%,transparent 34%,#000 80%);mask-image:linear-gradient(90deg,transparent 0%,transparent 34%,#000 80%)}
+.slide.cover>.shead,.slide.cover>.sbody{position:relative}
+/* logo top right on every slide */
+.bb-logo{margin-left:auto;display:inline-flex;align-items:center;gap:8px;font-family:var(--f-display);font-weight:700;font-size:25px;letter-spacing:0;color:var(--ink);white-space:nowrap;line-height:1}
+.bb-logo svg{width:32px;height:32px;flex:none}
+.bb-logo b{color:var(--signal);font-weight:700}
+.bb-logo+.narr{margin-left:14px}
+.has-qr .shead{position:relative;z-index:1}
+/* slide 5: the logo in the phone header */
+.ph-top .ph-logo{display:inline-flex;align-items:center;gap:3px;background:var(--panel);padding:2px 5px 2px 3px;border-radius:3px;font-family:var(--f-display);font-weight:700;font-size:10px;line-height:1;color:var(--ink)}
+.ph-top .ph-logo svg{width:11px;height:11px;flex:none}
+.ph-top .ph-logo b{color:var(--signal);font-weight:700}
+.ph-top .ph-logo span{background:none;padding:0;border-radius:0;color:inherit;font:inherit}
 </style>
 
 <div class="wrap">
@@ -748,8 +764,9 @@ kbd{font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);border
 <div class="stage" id="stage"><div class="deck" id="deck">
 
 <!-- 1 Title -->
-<section class="slide title on" data-chapter="Title" data-time="1:30" aria-label="Baumarkt-Buddy">
-  <header class="shead"><div class="sign"><b>Final pitch</b><span>Applied AI · MBA Digital Business &amp; AI</span></div><span class="stime">~1:30</span></header>
+<section class="slide title cover on" data-chapter="Title" data-time="1:30" aria-label="Baumarkt-Buddy">
+  <img class="cover-img" src="img/bb_front.png" alt="" aria-hidden="true">
+  <header class="shead"><div class="sign"><b>Final pitch</b><span>Applied AI · MBA Digital Business &amp; AI</span></div><span class="stime">~1:30</span><span class="bb-logo" role="img" aria-label="Baumarkt-Buddy"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M15 41H40V20L24 6 8 20V33" fill="none" stroke="var(--signal)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 39L26 24" stroke="var(--signal)" stroke-width="5.5" stroke-linecap="round"/><rect x="21" y="17.5" width="17" height="8" rx="2" transform="rotate(45 29.5 21.5)" fill="var(--signal)"/></svg><span>Baumarkt-<b>Buddy</b></span></span></header>
   <div class="sbody">
     <p class="hook">Have you ever come home from the DIY store with the wrong wall plug?</p>
     <h1>Baumarkt-<em>Buddy</em></h1>
@@ -761,7 +778,7 @@ kbd{font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);border
 
 <!-- 2 Problem & Solution -->
 <section class="slide has-pip" data-chapter="Problem &amp; Solution" data-time="1:30" aria-label="DIY projects often fail before they even begin">
-  <header class="shead"><div class="sign"><b>01</b><span>Problem &amp; Solution</span></div><button class="narr" type="button" disabled>♪ Audio<kbd>A</kbd></button></header>
+  <header class="shead"><div class="sign"><b>01</b><span>Problem &amp; Solution</span></div><span class="bb-logo" role="img" aria-label="Baumarkt-Buddy"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M15 41H40V20L24 6 8 20V33" fill="none" stroke="var(--signal)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 39L26 24" stroke="var(--signal)" stroke-width="5.5" stroke-linecap="round"/><rect x="21" y="17.5" width="17" height="8" rx="2" transform="rotate(45 29.5 21.5)" fill="var(--signal)"/></svg><span>Baumarkt-<b>Buddy</b></span></span><button class="narr" type="button" disabled>♪ Audio<kbd>A</kbd></button></header>
   <div class="pip" aria-label="Narrator video"><video src="media/Part1.mp4" data-clip="media/Part1.mp4" preload="auto" playsinline></video><video src="media/Part2.mp4" data-clip="media/Part2.mp4" preload="auto" playsinline></video></div>
   <div class="sbody">
     <h2>DIY projects often fail before they even begin</h2>
@@ -800,7 +817,7 @@ kbd{font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);border
 
 <!-- 3 Target users -->
 <section class="slide has-pip" data-chapter="Target users" data-time="1:30" aria-label="We help DIY beginners turn ideas into achievable projects">
-  <header class="shead"><div class="sign"><b>02</b><span>Target users</span></div><button class="narr" type="button" disabled>♪ Audio<kbd>A</kbd></button></header>
+  <header class="shead"><div class="sign"><b>02</b><span>Target users</span></div><span class="bb-logo" role="img" aria-label="Baumarkt-Buddy"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M15 41H40V20L24 6 8 20V33" fill="none" stroke="var(--signal)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 39L26 24" stroke="var(--signal)" stroke-width="5.5" stroke-linecap="round"/><rect x="21" y="17.5" width="17" height="8" rx="2" transform="rotate(45 29.5 21.5)" fill="var(--signal)"/></svg><span>Baumarkt-<b>Buddy</b></span></span><button class="narr" type="button" disabled>♪ Audio<kbd>A</kbd></button></header>
   <div class="pip" aria-label="Narrator video"><video src="media/Part3_1.mp4" data-clip="media/Part3_1.mp4" preload="auto" playsinline></video><video src="media/Part3_2.mp4" data-clip="media/Part3_2.mp4" preload="auto" playsinline></video></div>
   <div class="sbody">
     <h2>We help DIY beginners turn ideas into achievable projects</h2>
@@ -842,7 +859,7 @@ kbd{font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);border
 
 <!-- 4 Market & competitors -->
 <section class="slide" data-chapter="Market &amp; Competitors" data-time="2:00" aria-label="Why this project: no German chain covers the full DIY journey">
-  <header class="shead"><div class="sign"><b>03</b><span>Market &amp; Competitors</span></div><span class="stime">~2:00</span></header>
+  <header class="shead"><div class="sign"><b>03</b><span>Market &amp; Competitors</span></div><span class="stime">~2:00</span><span class="bb-logo" role="img" aria-label="Baumarkt-Buddy"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M15 41H40V20L24 6 8 20V33" fill="none" stroke="var(--signal)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 39L26 24" stroke="var(--signal)" stroke-width="5.5" stroke-linecap="round"/><rect x="21" y="17.5" width="17" height="8" rx="2" transform="rotate(45 29.5 21.5)" fill="var(--signal)"/></svg><span>Baumarkt-<b>Buddy</b></span></span></header>
   <div class="sbody" style="gap:10px">
     <h2>Why this project: no German chain covers the full DIY journey</h2>
     <div class="mk" style="grid-template-columns:minmax(0,.82fr) minmax(0,1.5fr)">
@@ -889,14 +906,14 @@ kbd{font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);border
 
 <!-- 5 App workflow -->
 <section class="slide" data-chapter="App workflow" data-time="2:00" aria-label="From a project idea to a checked shopping list in 5 steps">
-  <header class="shead"><div class="sign"><b>04</b><span>App workflow · R1 prototype</span></div><span class="stime">~2:00</span></header>
+  <header class="shead"><div class="sign"><b>04</b><span>App workflow · R1 prototype</span></div><span class="stime">~2:00</span><span class="bb-logo" role="img" aria-label="Baumarkt-Buddy"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M15 41H40V20L24 6 8 20V33" fill="none" stroke="var(--signal)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 39L26 24" stroke="var(--signal)" stroke-width="5.5" stroke-linecap="round"/><rect x="21" y="17.5" width="17" height="8" rx="2" transform="rotate(45 29.5 21.5)" fill="var(--signal)"/></svg><span>Baumarkt-<b>Buddy</b></span></span></header>
   <div class="sbody" style="gap:12px">
     <h2>From project idea to checked shopping list in 5 steps</h2>
 
     <div class="aw">
       <div data-step="1" class="aw-step">
         <span class="aw-n">1</span>
-        <div class="ph" aria-hidden="true"><div class="ph-top"><span>Baumarkt-Buddy</span></div>
+        <div class="ph" aria-hidden="true"><div class="ph-top"><span class="ph-logo"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M15 41H40V20L24 6 8 20V33" fill="none" stroke="var(--signal)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 39L26 24" stroke="var(--signal)" stroke-width="5.5" stroke-linecap="round"/><rect x="21" y="17.5" width="17" height="8" rx="2" transform="rotate(45 29.5 21.5)" fill="var(--signal)"/></svg><span>Baumarkt-<b>Buddy</b></span></span></div>
           <div class="ph-b"><div class="ph-t">Before you start</div>
             <div class="ph-sk"></div><div class="ph-sk" style="width:80%"></div><div class="ph-sk"></div><div class="ph-sk" style="width:65%"></div>
             <div class="ph-sp"></div><div class="ph-btn">Start</div></div></div>
@@ -905,7 +922,7 @@ kbd{font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);border
 
       <div data-step="2" class="aw-step">
         <span class="aw-n">2</span>
-        <div class="ph" aria-hidden="true"><div class="ph-top"><span>Baumarkt-Buddy</span></div>
+        <div class="ph" aria-hidden="true"><div class="ph-top"><span class="ph-logo"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M15 41H40V20L24 6 8 20V33" fill="none" stroke="var(--signal)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 39L26 24" stroke="var(--signal)" stroke-width="5.5" stroke-linecap="round"/><rect x="21" y="17.5" width="17" height="8" rx="2" transform="rotate(45 29.5 21.5)" fill="var(--signal)"/></svg><span>Baumarkt-<b>Buddy</b></span></span></div>
           <div class="ph-b"><div class="ph-t">Choose your store (optional)</div>
             <div class="ph-row"><div class="ph-o">91056</div><div class="ph-btn" style="flex:none">Find</div></div>
             <div class="ph-o on">OBI Erlangen West · 0 km</div>
@@ -917,7 +934,7 @@ kbd{font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);border
 
       <div data-step="3" class="aw-step">
         <span class="aw-n">3</span>
-        <div class="ph" aria-hidden="true"><div class="ph-top"><span>Baumarkt-Buddy</span></div>
+        <div class="ph" aria-hidden="true"><div class="ph-top"><span class="ph-logo"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M15 41H40V20L24 6 8 20V33" fill="none" stroke="var(--signal)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 39L26 24" stroke="var(--signal)" stroke-width="5.5" stroke-linecap="round"/><rect x="21" y="17.5" width="17" height="8" rx="2" transform="rotate(45 29.5 21.5)" fill="var(--signal)"/></svg><span>Baumarkt-<b>Buddy</b></span></span></div>
           <div class="ph-b"><div class="ph-t">What do you want to do?</div>
             <div class="ph-o">"Hang an 80 cm shelf on a concrete wall"</div>
             <div class="ph-row"><div class="ph-btn o">🎤 Speak</div><div class="ph-btn">Continue</div></div>
@@ -928,7 +945,7 @@ kbd{font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);border
 
       <div data-step="4" class="aw-step">
         <span class="aw-n">4</span>
-        <div class="ph" aria-hidden="true"><div class="ph-top"><span>Baumarkt-Buddy</span></div>
+        <div class="ph" aria-hidden="true"><div class="ph-top"><span class="ph-logo"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M15 41H40V20L24 6 8 20V33" fill="none" stroke="var(--signal)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 39L26 24" stroke="var(--signal)" stroke-width="5.5" stroke-linecap="round"/><rect x="21" y="17.5" width="17" height="8" rx="2" transform="rotate(45 29.5 21.5)" fill="var(--signal)"/></svg><span>Baumarkt-<b>Buddy</b></span></span></div>
           <div class="ph-b"><div class="ph-t">Did we understand you correctly?</div>
             <div class="ph-o">Project: Hang a shelf<em>guess – please confirm</em></div>
             <div class="ph-o">Wall: Concrete<em>guess – please confirm</em></div>
@@ -939,7 +956,7 @@ kbd{font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);border
 
       <div data-step="5" class="aw-step last">
         <span class="aw-n">5</span>
-        <div class="ph" aria-hidden="true"><div class="ph-top"><span>Baumarkt-Buddy</span></div>
+        <div class="ph" aria-hidden="true"><div class="ph-top"><span class="ph-logo"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M15 41H40V20L24 6 8 20V33" fill="none" stroke="var(--signal)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 39L26 24" stroke="var(--signal)" stroke-width="5.5" stroke-linecap="round"/><rect x="21" y="17.5" width="17" height="8" rx="2" transform="rotate(45 29.5 21.5)" fill="var(--signal)"/></svg><span>Baumarkt-<b>Buddy</b></span></span></div>
           <div class="ph-b"><div class="ph-s">Wall: concrete ✓ · Size: 80 × 20 cm ✓</div><div class="ph-t">Choose your plug</div>
             <div class="ph-s">How much will you put on it?</div>
             <div class="ph-o">6 mm plug<em>up to 20 kg</em></div><div class="ph-o on">8 mm plug<em>up to 32 kg</em></div><div class="ph-o">10 mm plug<em>up to 48 kg</em></div><div class="ph-o">12 mm plug<em>up to 50 kg</em></div>
@@ -972,7 +989,7 @@ kbd{font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);border
 
 <!-- 6 Live demo (app inside the slide) -->
 <section class="slide" data-chapter="Live demo" data-time="3:00" aria-label="Live demo: hang a shelf in under 2 minutes">
-  <header class="shead"><div class="sign"><b>05</b><span>Live demo · released app</span></div><span class="stime">~3:00</span></header>
+  <header class="shead"><div class="sign"><b>05</b><span>Live demo · released app</span></div><span class="stime">~3:00</span><span class="bb-logo" role="img" aria-label="Baumarkt-Buddy"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M15 41H40V20L24 6 8 20V33" fill="none" stroke="var(--signal)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 39L26 24" stroke="var(--signal)" stroke-width="5.5" stroke-linecap="round"/><rect x="21" y="17.5" width="17" height="8" rx="2" transform="rotate(45 29.5 21.5)" fill="var(--signal)"/></svg><span>Baumarkt-<b>Buddy</b></span></span></header>
   <div class="sbody" style="gap:10px">
     <h2>Live demo: from idea to checked list in under 2 minutes</h2>
     <div class="demo-g">
@@ -1010,7 +1027,7 @@ kbd{font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);border
 
 <!-- 6 UML sequence (moved from backup) -->
 <section class="slide" data-chapter="UML sequence" data-time="1:30" aria-label="One request, step by step: hang an 80 cm shelf">
-  <header class="shead"><div class="sign"><b>06</b><span>UML · sequence diagram</span></div><span class="stime">~1:30</span></header>
+  <header class="shead"><div class="sign"><b>06</b><span>UML · sequence diagram</span></div><span class="stime">~1:30</span><span class="bb-logo" role="img" aria-label="Baumarkt-Buddy"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M15 41H40V20L24 6 8 20V33" fill="none" stroke="var(--signal)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 39L26 24" stroke="var(--signal)" stroke-width="5.5" stroke-linecap="round"/><rect x="21" y="17.5" width="17" height="8" rx="2" transform="rotate(45 29.5 21.5)" fill="var(--signal)"/></svg><span>Baumarkt-<b>Buddy</b></span></span></header>
   <div class="sbody" style="gap:10px">
     <h2>One request, step by step: hang an 80 cm shelf</h2>
     <div class="seq">
@@ -1022,7 +1039,7 @@ kbd{font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);border
 
 <!-- 7 V-model -->
 <section class="slide" data-chapter="V-model" data-time="2:30" aria-label="Defined on the left, proven on the right">
-  <header class="shead"><div class="sign"><b>07</b><span>V-model</span></div><span class="stime">~2:30</span></header>
+  <header class="shead"><div class="sign"><b>07</b><span>V-model</span></div><span class="stime">~2:30</span><span class="bb-logo" role="img" aria-label="Baumarkt-Buddy"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M15 41H40V20L24 6 8 20V33" fill="none" stroke="var(--signal)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 39L26 24" stroke="var(--signal)" stroke-width="5.5" stroke-linecap="round"/><rect x="21" y="17.5" width="17" height="8" rx="2" transform="rotate(45 29.5 21.5)" fill="var(--signal)"/></svg><span>Baumarkt-<b>Buddy</b></span></span></header>
   <div class="sbody" style="gap:10px">
     <h2>Defined on the left, proven on the right</h2>
     <div class="v">
@@ -1054,7 +1071,7 @@ kbd{font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);border
 
 <!-- 8 Architecture & zero cost -->
 <section class="slide" data-chapter="Architecture &amp; zero cost" data-time="2:00" aria-label="The AI proposes, the code decides, and it costs nothing to run">
-  <header class="shead"><div class="sign"><b>08</b><span>Architecture · zero cost</span></div><span class="stime">~2:00</span></header>
+  <header class="shead"><div class="sign"><b>08</b><span>Architecture · zero cost</span></div><span class="stime">~2:00</span><span class="bb-logo" role="img" aria-label="Baumarkt-Buddy"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M15 41H40V20L24 6 8 20V33" fill="none" stroke="var(--signal)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 39L26 24" stroke="var(--signal)" stroke-width="5.5" stroke-linecap="round"/><rect x="21" y="17.5" width="17" height="8" rx="2" transform="rotate(45 29.5 21.5)" fill="var(--signal)"/></svg><span>Baumarkt-<b>Buddy</b></span></span></header>
   <div class="sbody" style="gap:12px">
     <h2>The AI proposes, the code decides, and it costs nothing to run</h2>
     <div class="chain">
@@ -1089,7 +1106,7 @@ kbd{font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);border
 
 <!-- 9 Vibe coding process -->
 <section class="slide" data-chapter="Vibe coding process" data-time="3:00" aria-label="Partnership coding: the agent builds, tests verify, the team decides">
-  <header class="shead"><div class="sign"><b>09</b><span>Implementation · vibe coding</span></div><span class="stime">~3:00</span></header>
+  <header class="shead"><div class="sign"><b>09</b><span>Implementation · vibe coding</span></div><span class="stime">~3:00</span><span class="bb-logo" role="img" aria-label="Baumarkt-Buddy"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M15 41H40V20L24 6 8 20V33" fill="none" stroke="var(--signal)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 39L26 24" stroke="var(--signal)" stroke-width="5.5" stroke-linecap="round"/><rect x="21" y="17.5" width="17" height="8" rx="2" transform="rotate(45 29.5 21.5)" fill="var(--signal)"/></svg><span>Baumarkt-<b>Buddy</b></span></span></header>
   <div class="sbody" style="gap:12px">
     <h2>Partnership coding: the agent builds, tests verify, the team decides</h2>
     <div class="grid g4">
@@ -1121,7 +1138,7 @@ kbd{font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);border
 
 <!-- 10 Key takeaways & lessons learned -->
 <section class="slide" data-chapter="Takeaways &amp; lessons" data-time="2:00" aria-label="What we built, and what we learned building it">
-  <header class="shead"><div class="sign"><b>10</b><span>Key takeaways &amp; lessons learned</span></div><span class="stime">~2:00</span></header>
+  <header class="shead"><div class="sign"><b>10</b><span>Key takeaways &amp; lessons learned</span></div><span class="stime">~2:00</span><span class="bb-logo" role="img" aria-label="Baumarkt-Buddy"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M15 41H40V20L24 6 8 20V33" fill="none" stroke="var(--signal)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 39L26 24" stroke="var(--signal)" stroke-width="5.5" stroke-linecap="round"/><rect x="21" y="17.5" width="17" height="8" rx="2" transform="rotate(45 29.5 21.5)" fill="var(--signal)"/></svg><span>Baumarkt-<b>Buddy</b></span></span></header>
   <div class="sbody">
     <h2>What we built, and what we learned building it</h2>
     <div class="kt">
@@ -1164,7 +1181,7 @@ kbd{font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);border
 
 <!-- 10 Q&A -->
 <section class="slide title has-qr" data-chapter="Q&amp;A" data-time="1:00" aria-label="Questions">
-  <header class="shead"><div class="sign"><b>Q&amp;A</b><span>Thank you</span></div><span class="stime">~1:00</span></header>
+  <header class="shead"><div class="sign"><b>Q&amp;A</b><span>Thank you</span></div><span class="stime">~1:00</span><span class="bb-logo" role="img" aria-label="Baumarkt-Buddy"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M15 41H40V20L24 6 8 20V33" fill="none" stroke="var(--signal)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 39L26 24" stroke="var(--signal)" stroke-width="5.5" stroke-linecap="round"/><rect x="21" y="17.5" width="17" height="8" rx="2" transform="rotate(45 29.5 21.5)" fill="var(--signal)"/></svg><span>Baumarkt-<b>Buddy</b></span></span></header>
   <div class="sbody">
     <h1>Questions<em>?</em></h1>
     <p class="lead">Baumarkt-Buddy: one project in, a safe and compatible shopping list out.</p>
@@ -1176,7 +1193,7 @@ kbd{font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);border
 
 <!-- 12 Backup: end-to-end workflow, concept to operation -->
 <section class="slide" data-chapter="Backup: Workflow" data-time="–" aria-label="From concept to operation: who does what">
-  <header class="shead"><div class="sign"><b>Backup</b><span>Process · end-to-end workflow</span></div></header>
+  <header class="shead"><div class="sign"><b>Backup</b><span>Process · end-to-end workflow</span></div><span class="bb-logo" role="img" aria-label="Baumarkt-Buddy"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M15 41H40V20L24 6 8 20V33" fill="none" stroke="var(--signal)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 39L26 24" stroke="var(--signal)" stroke-width="5.5" stroke-linecap="round"/><rect x="21" y="17.5" width="17" height="8" rx="2" transform="rotate(45 29.5 21.5)" fill="var(--signal)"/></svg><span>Baumarkt-<b>Buddy</b></span></span></header>
   <div class="sbody" style="gap:10px">
     <h2>People decide, agents draft, code builds</h2>
 
@@ -1242,7 +1259,7 @@ kbd{font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);border
 
 <!-- Backup: Agentic AI in the development process -->
 <section class="slide" data-chapter="Backup: Agentic AI" data-time="–" aria-label="Agentic AI built the app; the app itself is not agentic">
-  <header class="shead"><div class="sign"><b>Backup</b><span>Process · agentic AI in development</span></div></header>
+  <header class="shead"><div class="sign"><b>Backup</b><span>Process · agentic AI in development</span></div><span class="bb-logo" role="img" aria-label="Baumarkt-Buddy"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M15 41H40V20L24 6 8 20V33" fill="none" stroke="var(--signal)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 39L26 24" stroke="var(--signal)" stroke-width="5.5" stroke-linecap="round"/><rect x="21" y="17.5" width="17" height="8" rx="2" transform="rotate(45 29.5 21.5)" fill="var(--signal)"/></svg><span>Baumarkt-<b>Buddy</b></span></span></header>
   <div class="sbody" style="gap:10px">
     <h2>An AI agent built the app – the app itself is not agentic</h2>
     <div class="ag">
@@ -1309,7 +1326,7 @@ kbd{font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);border
 
 <!-- Backup: Tool stack -->
 <section class="slide" data-chapter="Backup: Tool stack" data-time="–" aria-label="Tool stack: from requirements to the running app">
-  <header class="shead"><div class="sign"><b>Backup</b><span>Process · tool stack</span></div></header>
+  <header class="shead"><div class="sign"><b>Backup</b><span>Process · tool stack</span></div><span class="bb-logo" role="img" aria-label="Baumarkt-Buddy"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M15 41H40V20L24 6 8 20V33" fill="none" stroke="var(--signal)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 39L26 24" stroke="var(--signal)" stroke-width="5.5" stroke-linecap="round"/><rect x="21" y="17.5" width="17" height="8" rx="2" transform="rotate(45 29.5 21.5)" fill="var(--signal)"/></svg><span>Baumarkt-<b>Buddy</b></span></span></header>
   <div class="sbody" style="gap:10px">
     <h2>Tool stack: from requirements to the running app</h2>
     <div class="ts">
@@ -1351,7 +1368,7 @@ kbd{font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);border
 
 <!-- Backup: Risk management -->
 <section class="slide" data-chapter="Backup: Risk management" data-time="–" aria-label="Risks are managed in a loop, not once">
-  <header class="shead"><div class="sign"><b>Backup</b><span>Planning · risk management</span></div></header>
+  <header class="shead"><div class="sign"><b>Backup</b><span>Planning · risk management</span></div><span class="bb-logo" role="img" aria-label="Baumarkt-Buddy"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M15 41H40V20L24 6 8 20V33" fill="none" stroke="var(--signal)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 39L26 24" stroke="var(--signal)" stroke-width="5.5" stroke-linecap="round"/><rect x="21" y="17.5" width="17" height="8" rx="2" transform="rotate(45 29.5 21.5)" fill="var(--signal)"/></svg><span>Baumarkt-<b>Buddy</b></span></span></header>
   <div class="sbody" style="gap:10px">
     <h2>Risks are managed in a loop, not once</h2>
     <div class="box tbl rk">
@@ -1371,7 +1388,7 @@ kbd{font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);border
 
 <!-- 11 Backup: MoSCoW scope R1 -->
 <section class="slide" data-chapter="Backup: MoSCoW" data-time="–" aria-label="Release 1 scope by MoSCoW">
-  <header class="shead"><div class="sign"><b>Backup</b><span>Requirements · MoSCoW</span></div></header>
+  <header class="shead"><div class="sign"><b>Backup</b><span>Requirements · MoSCoW</span></div><span class="bb-logo" role="img" aria-label="Baumarkt-Buddy"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M15 41H40V20L24 6 8 20V33" fill="none" stroke="var(--signal)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 39L26 24" stroke="var(--signal)" stroke-width="5.5" stroke-linecap="round"/><rect x="21" y="17.5" width="17" height="8" rx="2" transform="rotate(45 29.5 21.5)" fill="var(--signal)"/></svg><span>Baumarkt-<b>Buddy</b></span></span></header>
   <div class="sbody" style="gap:10px">
     <h2>59 R1 requirements: 50 must-haves, 9 should-haves</h2>
 
@@ -1470,7 +1487,7 @@ kbd{font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);border
 
 <!-- Backup: UML 1/2 use cases + domain model -->
 <section class="slide" data-chapter="Backup: UML use cases" data-time="–" aria-label="What the customer can do, and the data behind it">
-  <header class="shead"><div class="sign"><b>Backup</b><span>Design · UML use cases &amp; classes</span></div></header>
+  <header class="shead"><div class="sign"><b>Backup</b><span>Design · UML use cases &amp; classes</span></div><span class="bb-logo" role="img" aria-label="Baumarkt-Buddy"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M15 41H40V20L24 6 8 20V33" fill="none" stroke="var(--signal)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 39L26 24" stroke="var(--signal)" stroke-width="5.5" stroke-linecap="round"/><rect x="21" y="17.5" width="17" height="8" rx="2" transform="rotate(45 29.5 21.5)" fill="var(--signal)"/></svg><span>Baumarkt-<b>Buddy</b></span></span></header>
   <div class="sbody" style="gap:10px">
     <h2>What the customer can do, and the data behind it</h2>
     <div class="uml-grid">
@@ -1490,7 +1507,7 @@ kbd{font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);border
 
 <!-- Backup: Live demo scenarios -->
 <section class="slide" data-chapter="Backup: Demo scenarios" data-time="–" aria-label="Three scenarios, three results">
-  <header class="shead"><div class="sign"><b>Backup</b><span>Implementation · demo scenarios</span></div></header>
+  <header class="shead"><div class="sign"><b>Backup</b><span>Implementation · demo scenarios</span></div><span class="bb-logo" role="img" aria-label="Baumarkt-Buddy"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M15 41H40V20L24 6 8 20V33" fill="none" stroke="var(--signal)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 39L26 24" stroke="var(--signal)" stroke-width="5.5" stroke-linecap="round"/><rect x="21" y="17.5" width="17" height="8" rx="2" transform="rotate(45 29.5 21.5)" fill="var(--signal)"/></svg><span>Baumarkt-<b>Buddy</b></span></span></header>
   <div class="sbody" style="gap:10px">
     <h2>Three scenarios, three results</h2>
     <div class="grid g3">
@@ -1535,7 +1552,7 @@ kbd{font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);border
 
 <!-- Backup: Traceability matrix -->
 <section class="slide" data-chapter="Backup: Traceability" data-time="–" aria-label="Traceability: requirements, test cases and test results for R1">
-  <header class="shead"><div class="sign"><b>Backup</b><span>Testing · traceability</span></div></header>
+  <header class="shead"><div class="sign"><b>Backup</b><span>Testing · traceability</span></div><span class="bb-logo" role="img" aria-label="Baumarkt-Buddy"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M15 41H40V20L24 6 8 20V33" fill="none" stroke="var(--signal)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 39L26 24" stroke="var(--signal)" stroke-width="5.5" stroke-linecap="round"/><rect x="21" y="17.5" width="17" height="8" rx="2" transform="rotate(45 29.5 21.5)" fill="var(--signal)"/></svg><span>Baumarkt-<b>Buddy</b></span></span></header>
   <div class="sbody" style="gap:10px">
     <h2>All 59 requirements traced and verified by passing tests</h2>
     <div class="tx">
@@ -1831,7 +1848,7 @@ Manual run: all linked system / red-team tests PASS">09</span></div></div>
 
 <!-- Backup: test report (trace status and coverage) -->
 <section class="slide" data-chapter="Backup: Test report" data-time="–" aria-label="Test report: trace status and coverage of requirements and test cases">
-  <header class="shead"><div class="sign"><b>Backup</b><span>Testing · test report</span></div></header>
+  <header class="shead"><div class="sign"><b>Backup</b><span>Testing · test report</span></div><span class="bb-logo" role="img" aria-label="Baumarkt-Buddy"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M15 41H40V20L24 6 8 20V33" fill="none" stroke="var(--signal)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 39L26 24" stroke="var(--signal)" stroke-width="5.5" stroke-linecap="round"/><rect x="21" y="17.5" width="17" height="8" rx="2" transform="rotate(45 29.5 21.5)" fill="var(--signal)"/></svg><span>Baumarkt-<b>Buddy</b></span></span></header>
   <div class="sbody" style="gap:12px">
     <h2>59 requirements, 147 test cases, every one traced</h2>
     <div class="trp">
@@ -1866,7 +1883,7 @@ Manual run: all linked system / red-team tests PASS">09</span></div></div>
 
 <!-- Backup: KPI results -->
 <section class="slide" data-chapter="Backup: KPIs" data-time="–" aria-label="KPI targets and results for the R1 MVP">
-  <header class="shead"><div class="sign"><b>Backup</b><span>Validation · KPI results</span></div></header>
+  <header class="shead"><div class="sign"><b>Backup</b><span>Validation · KPI results</span></div><span class="bb-logo" role="img" aria-label="Baumarkt-Buddy"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M15 41H40V20L24 6 8 20V33" fill="none" stroke="var(--signal)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 39L26 24" stroke="var(--signal)" stroke-width="5.5" stroke-linecap="round"/><rect x="21" y="17.5" width="17" height="8" rx="2" transform="rotate(45 29.5 21.5)" fill="var(--signal)"/></svg><span>Baumarkt-<b>Buddy</b></span></span></header>
   <div class="sbody" style="gap:14px">
     <h2>All five MVP KPIs met</h2>
     <div class="kr-row"><div class="kr"><svg viewBox="0 0 100 100" role="img" aria-label="Products from the catalogue: 100 %, target 100 %"><title>100 % of listed products come from the catalogue, 0 % outside (target 0 % outside)</title><circle cx="50" cy="50" r="38" class="trk"/><circle cx="50" cy="50" r="38" class="arc" style="--off:0"/><text x="50" y="52" text-anchor="middle" class="val">100 %</text><text x="50" y="66" text-anchor="middle" class="sub">catalogue</text></svg><strong>Products from the catalogue</strong><span class="tg">Target 0 % outside</span><span class="met">✓ Met</span><span class="ev">Unknown products rejected (#9, #16) · manual TC PASS</span></div><div class="kr"><svg viewBox="0 0 100 100" role="img" aria-label="High-risk jobs refused: 100 %, target 100 %"><title>High-risk jobs refused: 100 % (target 100 %)</title><circle cx="50" cy="50" r="38" class="trk"/><circle cx="50" cy="50" r="38" class="arc" style="--off:0"/><text x="50" y="52" text-anchor="middle" class="val">100 %</text><text x="50" y="66" text-anchor="middle" class="sub">refused</text></svg><strong>High-risk jobs refused</strong><span class="tg">Target 100 %</span><span class="met">✓ Met</span><span class="ev">Text, voice, typos (#31 #39 #44 #46 #53 #116) · RT-01…03</span></div><div class="kr"><svg viewBox="0 0 100 100" role="img" aria-label="Unknown wall / load blocks advice: 100 %, target 100 %"><title>Unknown wall / load blocks advice: 100 % (target 100 %)</title><circle cx="50" cy="50" r="38" class="trk"/><circle cx="50" cy="50" r="38" class="arc" style="--off:0"/><text x="50" y="52" text-anchor="middle" class="val">100 %</text><text x="50" y="66" text-anchor="middle" class="sub">stopped</text></svg><strong>Unknown wall / load blocks advice</strong><span class="tg">Target 100 %</span><span class="met">✓ Met</span><span class="ev">#4 #5 #104 #111 · TC-029 / TC-030</span></div><div class="kr"><svg viewBox="0 0 100 100" role="img" aria-label="List generated: 0.6 ms, target < 5 s"><title>List generated in 0.6 ms in the automated run (target under 5 s)</title><circle cx="50" cy="50" r="38" class="trk"/><circle cx="50" cy="50" r="38" class="arc" style="--off:0"/><text x="50" y="52" text-anchor="middle" class="val">0.6 ms</text><text x="50" y="66" text-anchor="middle" class="sub">list</text></svg><strong>List generated</strong><span class="tg">Target < 5 s</span><span class="met">✓ Met</span><span class="ev">Automated timing #33 (store search 0.03 ms)</span></div><div class="kr"><svg viewBox="0 0 100 100" role="img" aria-label="Users finish in < 2 min: 5 / 5, target ≥ 4 of 5"><title>5 of 5 users finished in under 2 minutes (target at least 4 of 5, tick mark)</title><circle cx="50" cy="50" r="38" class="trk"/><circle cx="50" cy="50" r="38" class="arc" style="--off:0"/><line x1="18.6" y1="39.8" x2="7.2" y2="36.1" class="tgt"/><text x="50" y="52" text-anchor="middle" class="val">5 / 5</text><text x="50" y="66" text-anchor="middle" class="sub">users</text></svg><strong>Users finish in < 2 min</strong><span class="tg">Target ≥ 4 of 5</span><span class="met">✓ Met</span><span class="ev">Five-user test TC-047 (NFR-12)</span></div></div>
@@ -1878,7 +1895,7 @@ Manual run: all linked system / red-team tests PASS">09</span></div></div>
 
 <!-- Backup: Further releases -->
 <section class="slide" data-chapter="Backup: Releases" data-time="1:00" aria-label="From MVP to pilot store">
-  <header class="shead"><div class="sign"><b>Backup</b><span>Operation · release milestones</span></div><span class="stime">~1:00</span></header>
+  <header class="shead"><div class="sign"><b>Backup</b><span>Operation · release milestones</span></div><span class="stime">~1:00</span><span class="bb-logo" role="img" aria-label="Baumarkt-Buddy"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M15 41H40V20L24 6 8 20V33" fill="none" stroke="var(--signal)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 39L26 24" stroke="var(--signal)" stroke-width="5.5" stroke-linecap="round"/><rect x="21" y="17.5" width="17" height="8" rx="2" transform="rotate(45 29.5 21.5)" fill="var(--signal)"/></svg><span>Baumarkt-<b>Buddy</b></span></span></header>
   <div class="sbody">
     <h2>From MVP to pilot store</h2>
     <div class="road">
@@ -1897,7 +1914,7 @@ Manual run: all linked system / red-team tests PASS">09</span></div></div>
 
 <!-- Backup: Software evolution 1/2 -->
 <section class="slide" data-chapter="Backup: Software evolution" data-time="–" aria-label="Software evolution: every change runs the same loop">
-  <header class="shead"><div class="sign"><b>Backup</b><span>Evolution · releases</span></div></header>
+  <header class="shead"><div class="sign"><b>Backup</b><span>Evolution · releases</span></div><span class="bb-logo" role="img" aria-label="Baumarkt-Buddy"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M15 41H40V20L24 6 8 20V33" fill="none" stroke="var(--signal)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 39L26 24" stroke="var(--signal)" stroke-width="5.5" stroke-linecap="round"/><rect x="21" y="17.5" width="17" height="8" rx="2" transform="rotate(45 29.5 21.5)" fill="var(--signal)"/></svg><span>Baumarkt-<b>Buddy</b></span></span></header>
   <div class="sbody" style="gap:10px">
     <h2>Every change runs the same loop – release by release</h2>
     <div class="uml-p"><svg viewBox="0 0 1040 300" class="uml" role="img" aria-label="Software evolution process for Baumarkt-Buddy">
@@ -1950,7 +1967,7 @@ Manual run: all linked system / red-team tests PASS">09</span></div></div>
 
 <!-- Backup: Software evolution 2/2 – change management and maintenance -->
 <section class="slide" data-chapter="Backup: Change &amp; maintenance" data-time="–" aria-label="How we manage change and maintain the app">
-  <header class="shead"><div class="sign"><b>Backup</b><span>Evolution · change management &amp; maintenance</span></div></header>
+  <header class="shead"><div class="sign"><b>Backup</b><span>Evolution · change management &amp; maintenance</span></div><span class="bb-logo" role="img" aria-label="Baumarkt-Buddy"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M15 41H40V20L24 6 8 20V33" fill="none" stroke="var(--signal)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 39L26 24" stroke="var(--signal)" stroke-width="5.5" stroke-linecap="round"/><rect x="21" y="17.5" width="17" height="8" rx="2" transform="rotate(45 29.5 21.5)" fill="var(--signal)"/></svg><span>Baumarkt-<b>Buddy</b></span></span></header>
   <div class="sbody" style="gap:12px">
     <h2>How a change gets in, and how the app stays healthy</h2>
     <div class="cm">
@@ -1974,7 +1991,7 @@ Manual run: all linked system / red-team tests PASS">09</span></div></div>
 
 <!-- Backup: Git repository and change log -->
 <section class="slide" data-chapter="Backup: Git &amp; change log" data-time="–" aria-label="Git repository and change log: one place for code, data, tests and every change">
-  <header class="shead"><div class="sign"><b>Backup</b><span>Evolution · Git repository &amp; change log</span></div></header>
+  <header class="shead"><div class="sign"><b>Backup</b><span>Evolution · Git repository &amp; change log</span></div><span class="bb-logo" role="img" aria-label="Baumarkt-Buddy"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M15 41H40V20L24 6 8 20V33" fill="none" stroke="var(--signal)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 39L26 24" stroke="var(--signal)" stroke-width="5.5" stroke-linecap="round"/><rect x="21" y="17.5" width="17" height="8" rx="2" transform="rotate(45 29.5 21.5)" fill="var(--signal)"/></svg><span>Baumarkt-<b>Buddy</b></span></span></header>
   <div class="sbody" style="gap:12px">
     <h2>One repository: the app, its data, its tests and the story of every change</h2>
     <div class="grid g4">
